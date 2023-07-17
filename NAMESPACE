@@ -1,0 +1,4 @@
+exportPattern("^[[:alpha:]]+")
+importFrom("stats", "pnorm", "rnorm","runif")
+importFrom("stats", "ecdf", "na.exclude")
+importFrom("graphics", "hist")importFrom("stats", "dnorm", "glm", "optimize", "poisson", "predict",               "quantile", "sd", "smooth.spline")

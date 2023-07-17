@@ -1,0 +1,18 @@
+Package: MTCP
+Type: Package
+Title: Multiple testing and change-points
+Version: 0.1.0
+Author: Anica Kostic
+Maintainer: Anica Kostic <a.kostic@lse.ac.uk>
+Description: Methods connecting the topics of multiple testing and change-point detection. Includes the new estimator of the proportion of false null hypotheses in the multiple testing.
+License: GPL-3
+Encoding: UTF-8
+LazyData: true
+RoxygenNote: 7.2.3
+Suggests: knitr,
+    rmarkdown, fdrtool, BiocManager, limma, qvalue
+VignetteBuilder: knitr
+Repositories:
+  CRAN
+  Bioconductor
+
