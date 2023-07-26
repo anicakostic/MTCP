@@ -1,16 +1,19 @@
 #' Jiang & Doerge estimator calculation
 #'
 #' This function calculates the true null proportion estimates
-#' using the method proposed in
-#' "Jiang, H., & Doerge, R. W. (2008).
-#' Estimating the Proportion of True Null Hypotheses
-#' for Multiple Comparisons. Cancer Informatics, 6, 25--32"
+#' using the method proposed in Jiang, H., & Doerge, R. W. (2008)
 #'
 #' @param p_seq  A sequence of p-values
 #' @param N  The number of bootstrap samples
 #'
 #' @return Estimated true null proportion
-#'
+#' @references Jiang, H., & Doerge, R. W. (2008).
+#' Estimating the Proportion of True Null Hypotheses
+#' for Multiple Comparisons. Cancer Informatics, 6, 25--32
+#' https://doi.org/10.1177/117693510800600001
+#' @examples
+#' p_seq <- sim_pval(100, 0, 3, 0.1, 0)
+#' JD_est(p_seq, 1000)
 #' @export
 JD_est <- function(p_seq, N) {
   n <- length(p_seq)
@@ -56,17 +59,20 @@ JD_est <- function(p_seq, N) {
 #' Meinshausen & Rice estimator calculation
 #'
 #' This function calculates the false null proportion estimates
-#' using the method proposed in
-#' "Meinshausen, N., & Rice, J. (2006). Estimating the proportion of false null
-#'  hypotheses among a large number of independently tested hypotheses.
-#'  Annals of Statistics, 34(1), 373–393"
+#' using the method proposed in Meinshausen, N., & Rice, J. (2006)
+#'
 #'
 #'
 #' @param p_seq  A sequence of p-values
 #' @param alpha  For the confidence interval of level 1-alpha
 #'
 #' @return Estimated false null proportion
-#'
+#' @references "Meinshausen, N., & Rice, J. (2006). Estimating the proportion of false null
+#'  hypotheses among a large number of independently tested hypotheses.
+#'  Annals of Statistics, 34(1), 373–393" https://doi.org/10.1214/009053605000000741
+#' @examples
+#' p_seq <- sim_pval(100, 0, 3, 0.1, 0)
+#' MR_est(p_seq)
 #' @export
 MR_est <- function(p_seq, alpha = 0.05) {
   n <- length(p_seq)
@@ -90,8 +96,14 @@ MR_est <- function(p_seq, alpha = 0.05) {
 #'  Journal of the Royal Statistical Society. Series B (Statistical Methodology), 67(4), 555–572.
 #'
 #' @param p_seq  A sequence of p-values
-#'
+#' @references Langaas, M., Lindqvist, B. H., & Ferkingstad, E. (2005).
+#' Estimating the Proportion of True Null Hypotheses, with Application to DNA Microarray Data.
+#'  Journal of the Royal Statistical Society. Series B (Statistical Methodology), 67(4), 555–572.
+#'  https://doi.org/10.1111/j.1467-9868.2005.00515.x
 #' @return Estimated true null proportion
+#' @examples
+#' p_seq <- sim_pval(100, 0, 3, 0.1, 0)
+#' LLF_Grenander_est(p_seq)
 #'
 #' @export
 LLF_Grenander_est <- function(p_seq) {
@@ -117,12 +129,17 @@ LLF_Grenander_est <- function(p_seq) {
 #'
 #'
 #' @param p_seq  A sequence of p-values
-#'
 #' @return Estimated true null proportion
+#' @references  Broberg, P. (2005). A comparative review of estimates of the proportion
+#' unchanged genes and the false discovery rate. BMC Bioinformatics, 6, 199.
+#' https://doi.org/10.1186/1471-2105-6-199
+#' @examples
+#' p_seq <- sim_pval(100, 0, 3, 0.1, 0)
+#' MGF_est(p_seq)
 #'
 #' @export
 MGF_est <- function(p_seq){
-  # p_seq <- pvals
+
   R.s <- function(p_seq, s){
     sum(exp(s*p_seq))/length(p_seq)
   }
@@ -164,7 +181,12 @@ MGF_est <- function(p_seq){
 #' @param p_seq  A sequence of p-values
 #'
 #' @return Estimated true null proportion
-#'
+#' @references Broberg, P. (2005). A comparative review of estimates of the proportion
+#' unchanged genes and the false discovery rate. BMC Bioinformatics, 6, 199.
+#' https://doi.org/10.1186/1471-2105-6-199
+#' @examples
+#' p_seq <- sim_pval(100, 0, 3, 0.1, 0)
+#' PRE_est(p_seq)
 #' @export
 PRE_est <- function(p_seq)
 {
@@ -211,21 +233,25 @@ PRE_est <- function(p_seq)
 #' Hwang et al. Slope Difference estimator calculation
 #'
 #' This function calculates the estimates of the true null proportion using the
-#' slope Difference estimator proposed in Hwang, Y. T., Kuo, H. C., Wang,
-#'  C. C., & Lee, M. F. (2014). Estimating the number of true null hypotheses
-#'   in multiple hypothesis testing. Statistics and Computing, 24(3), 399–416.
+#' Slope Difference estimator proposed in Hwang, Y. T., Kuo, H. C., Wang,
+#'  C. C., & Lee, M. F. (2014).
 #'
 #' @param p_seq  A sequence of p-values
 #'
 #' @return Estimated true null proportion
-#'
+#' @references Hwang, Y. T., Kuo, H. C., Wang,
+#'  C. C., & Lee, M. F. (2014). Estimating the number of true null hypotheses
+#'   in multiple hypothesis testing. Statistics and Computing, 24(3), 399–416.
+#'   https://doi.org/10.1007/s11222-013-9377-5
+#' @examples
+#' p_seq <- sim_pval(100, 0, 3, 0.1, 0)
+#' Hwang_est(p_seq)
 #' @export
-#'
-#'
+
 Hwang_est <- function(p_seq) {
   n <- length(p_seq)
   p_seq <- sort(p_seq)
-  J <- which.max((1 - p_seq[i]) / (n + 1 - i) - p_seq[i] / i)
+  J <- which.max((1 - p_seq) / (n + 1 - 1:n) - p_seq / (1:n))
   return(min((n + 1 - J) / (1 - p_seq[J]) - 1, n) / n)
 }
 
