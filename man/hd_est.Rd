@@ -16,14 +16,24 @@ If NULL, the threshold is calculated by optimising a function defined in Eq. 8 i
 }
 \value{
 A list containing
-* `random_p_seq` the sequence of randomised p-values
-
-* `pi1_est` the corresponding Storey's estimator of the false null proportion based on the randomised sequence and for given lamdba
+\item{random_p_seq}{the sequence of randomised p-values}
+\item{pi1_est}{the corresponding Storey's estimator of the false null proportion based on the randomised sequence and for given lambda}
 }
 \description{
 This function produces a sequence of randomised p-values
 using the method proposed in
-Hoang, A.-T., & Dickhaus, T. (2020).
+Hoang, A.-T., & Dickhaus, T. (2022) and the resulting false null proportion estimator
+}
+\examples{
+p_seq <- sim_pval(100, null_mean = -0.2 * 5, alt_mean = 1 + 0.25 * 5, pi1 = 0.25, rho = 0.25)
+hd_est(p_seq)
+}
+\references{
+Hoang, A.-T., & Dickhaus, T. (2022).
 On the usage of randomized p-values in the Schweder–Spjøtvoll estimator.
-Annals of the Institute of Statistical Mathematics, 74, 289–319.
+Annals of the Institute of Statistical Mathematics, 74(2), 289–319.
+https://doi.org/10.1007/s10463-021-00797-0
+}
+\seealso{
+\code{\link{sim_pval}}
 }

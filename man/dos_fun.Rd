@@ -15,13 +15,13 @@ dos_fun(p_seq, alpha = 1, exc = 0)
 }
 \value{
 A list containing
-* `dos_seq` the DOS sequence
-
-* `cp_loc` the location of the maximum of the DOS sequence
+\item{dos_seq}{the DOS sequence}
+\item{cp_loc}{the location of the maximum of the DOS sequence}
 }
 \description{
-This function loads a file as a matrix. It assumes that the first column
-contains the rownames and the subsequent columns are the sample identifiers.
-Any rows with duplicated row names will be dropped with the first one being
-kepted.
+This function calculates the DOS sequence and the estimated change-point location
+}
+\examples{
+p_seq <- sim_pval(100, 0, 3, 0.1, 0)
+dos_fun(p_seq)
 }

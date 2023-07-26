@@ -16,8 +16,15 @@ Estimated true null proportion
 }
 \description{
 This function calculates the true null proportion estimates
-using the method proposed in
-"Jiang, H., & Doerge, R. W. (2008).
+using the method proposed in Jiang, H., & Doerge, R. W. (2008)
+}
+\examples{
+p_seq <- sim_pval(100, 0, 3, 0.1, 0)
+JD_est(p_seq, 1000)
+}
+\references{
+Jiang, H., & Doerge, R. W. (2008).
 Estimating the Proportion of True Null Hypotheses
-for Multiple Comparisons. Cancer Informatics, 6, 25--32"
+for Multiple Comparisons. Cancer Informatics, 6, 25--32
+https://doi.org/10.1177/117693510800600001
 }

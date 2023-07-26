@@ -1,17 +1,17 @@
 #' DOS sequence calculation
 #'
-#' This function loads a file as a matrix. It assumes that the first column
-#' contains the rownames and the subsequent columns are the sample identifiers.
-#' Any rows with duplicated row names will be dropped with the first one being
-#' kepted.
+#' This function calculates the DOS sequence and the estimated change-point location
 #'
 #' @param p_seq  A sequence of p-values
 #' @param alpha  DOS sequence power parameter
 #' @param exc  Number of excluded values from the beginning
-#' @return A list containing
-#' * `dos_seq` the DOS sequence
-#'
-#' * `cp_loc` the location of the maximum of the DOS sequence
+#' @return
+#' A list containing
+#' \item{dos_seq}{the DOS sequence}
+#' \item{cp_loc}{the location of the maximum of the DOS sequence}
+#' @examples
+#' p_seq <- sim_pval(100, 0, 3, 0.1, 0)
+#' dos_fun(p_seq)
 #' @export
 dos_fun <- function(p_seq, alpha = 1, exc = 0) {
   p_seq <- sort(p_seq)
@@ -24,22 +24,28 @@ dos_fun <- function(p_seq, alpha = 1, exc = 0) {
   return(ret)
 }
 
-#' Storey's estimator function
+#' Storey's estimator calculation
 #'
 #' This function calculates the Storey's estimator
 #' of the false null proportion, given the tuning parameter values
-#' and the sequence of p-values
+#' and the sequence of p-values.
 #'
 #' @param lambda  A vector of tuning parameter values
 #' @param p_seq  A sequence of p-values
-#' @param mod Whether a modified Storey's estimator is to be calculated (see Blanchard, G.,
-#'  & Roquain, É. (2009). Adaptive false discovery rate control under independence and dependence.
-#'   Journal of Machine Learning Research, 10, 2837–2871.)
-#'
+#' @param mod Whether a modified Storey's estimator is to be used. See Blanchard, G.,
+#'  & Roquain, É. (2009).
 #' @return A list containing
-#' * `lambda` Input vector lambda
+#' \item{lambda}{Input vector lambda}
+#' \item{est}{The corresponding vector of estimates}
+#' @references  Blanchard, G.,
+#'  & Roquain, É. (2009). Adaptive false discovery rate control under independence and dependence.
+#'   Journal of Machine Learning Research, 10, 2837–2871. http://jmlr.org/papers/v10/blanchard09a.html
+#' @examples
+#' p_seq <- sim_pval(100, 0, 3, 0.1, 0)
+#' storey_pi1est(0.5, p_seq)
 #'
-#'* `est` The corresponding vector of estimates
+#' dos_cp <- dos_fun(p_seq)$cp_loc
+#' storey_pi1est(dos_cp, p_seq)
 #' @export
 storey_pi1est <- function(lambda, p_seq, mod = FALSE) {
   p_seq <- sort(p_seq)
@@ -76,9 +82,10 @@ storey_pi1est <- function(lambda, p_seq, mod = FALSE) {
 #' @param pi1 A proportion of false null p-values
 #' @param rho A correlation parameter between 0 and 1, such that the correlation between
 #' each pair of p-values is equal to rho
-#'
+#' @examples
+#' p_seq <- sim_pval(100, 0, 3, 0.1, 0)
+#' plot(p_seq)
 #' @return A vector of p-values
-#'
 #' @export
 sim_pval <- function(n, null_mean, alt_mean, pi1, rho) {
   if (length(null_mean) == 1)

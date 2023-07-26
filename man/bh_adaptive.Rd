@@ -7,25 +7,39 @@
 bh_adaptive(p_seq, pi0, alpha, sig)
 }
 \arguments{
-\item{p_seq}{A sequence of p-values}
+\item{p_seq}{A sorted sequence of p-values}
 
 \item{pi0}{Estimated true null proportion}
 
 \item{alpha}{FDR control level}
 
-\item{sig}{A vector matching p-values, zero if the corresponding p-value
+\item{sig}{A vector matching the p-values sequence, a term is zero if the corresponding p-value
 is true null, and 1 if it is false null}
 }
 \value{
 A list containing
-* `fdr` the realised proportion of false discoveries among all discoveries
-
-* `power` the proportion of true discoveries among all false null p-values
+\item{fdr}{the realised proportion of false discoveries among all discoveries}
+\item{power}{the proportion of true discoveries among all false null p-values}
 }
 \description{
 This function calculates the FDR and the power of the adaptive BH procedure
 for a given value of the proportion estimator
-(Benjamini, Y., & Hochberg, Y. (2000). On the Adaptive Control of the False
+}
+\examples{
+# We do not use sim_pval() function to generate p-values
+# because the information about the order of true
+# and false null p-values needs to be perserved
+pi0 <- 0.75
+n <- 100
+mu <- 3
+x <- rnorm(n) + c(rep(0, floor(pi0 * n)), rep(mu, n - floor(n * pi0)))
+sig <- c(rep(0, floor(pi0 * n)), rep(1, n - floor(pi0 * n)))
+sig <- sig[order(1 - pnorm(x))]
+p_seq <- sort(1 - pnorm(x))
+
+}
+\references{
+Benjamini, Y., & Hochberg, Y. (2000). On the Adaptive Control of the False
 Discovery Rate in Multiple Testing with Independent Statistics.
- Journal of Educational and Behavioral Statistics, 25(1), 60.)
+ Journal of Educational and Behavioral Statistics, 25(1), 60. https://doi.org/10.2307/1165312
 }

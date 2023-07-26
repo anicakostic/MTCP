@@ -16,8 +16,14 @@ Estimated false null proportion
 }
 \description{
 This function calculates the false null proportion estimates
-using the method proposed in
+using the method proposed in Meinshausen, N., & Rice, J. (2006)
+}
+\examples{
+p_seq <- sim_pval(100, 0, 3, 0.1, 0)
+MR_est(p_seq)
+}
+\references{
 "Meinshausen, N., & Rice, J. (2006). Estimating the proportion of false null
  hypotheses among a large number of independently tested hypotheses.
- Annals of Statistics, 34(1), 373–393"
+ Annals of Statistics, 34(1), 373–393" https://doi.org/10.1214/009053605000000741
 }

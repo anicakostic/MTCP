@@ -2,10 +2,7 @@
 % Please edit documentation in R/additional_functions.R
 \name{LLF_Grenander_est}
 \alias{LLF_Grenander_est}
-\title{Estimator of the true null proportion at the longest constant interval in the Grenander estimator,
-as proposed in Langaas, M., Lindqvist, B. H., & Ferkingstad, E. (2005).
-Estimating the Proportion of True Null Hypotheses, with Application to DNA Microarray Data.
- Journal of the Royal Statistical Society. Series B (Statistical Methodology), 67(4), 555–572.}
+\title{Langaas, Lindqvist & Ferkingstad estimator calculation}
 \usage{
 LLF_Grenander_est(p_seq)
 }
@@ -20,4 +17,15 @@ Estimator of the true null proportion at the longest constant interval in the Gr
 as proposed in Langaas, M., Lindqvist, B. H., & Ferkingstad, E. (2005).
 Estimating the Proportion of True Null Hypotheses, with Application to DNA Microarray Data.
  Journal of the Royal Statistical Society. Series B (Statistical Methodology), 67(4), 555–572.
+}
+\examples{
+p_seq <- sim_pval(100, 0, 3, 0.1, 0)
+LLF_Grenander_est(p_seq)
+
+}
+\references{
+Langaas, M., Lindqvist, B. H., & Ferkingstad, E. (2005).
+Estimating the Proportion of True Null Hypotheses, with Application to DNA Microarray Data.
+ Journal of the Royal Statistical Society. Series B (Statistical Methodology), 67(4), 555–572.
+ https://doi.org/10.1111/j.1467-9868.2005.00515.x
 }

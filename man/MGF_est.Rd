@@ -2,11 +2,7 @@
 % Please edit documentation in R/additional_functions.R
 \name{MGF_est}
 \alias{MGF_est}
-\title{This function calculates the estimates of the true null proportion using the method 'MGF'
-proposed in Broberg, P. (2005). A comparative review of estimates of the proportion
-unchanged genes and the false discovery rate. BMC Bioinformatics, 6, 199. The code belongs to Per Broberg and
-it was a part of the now deprecated package 'SAGx' in BioConductor. 'SAGx' can be downloaded from
-https://www.bioconductor.org/packages//2.10/bioc/html/SAGx.html}
+\title{Broberg's MGF estimator calculation}
 \usage{
 MGF_est(p_seq)
 }
@@ -22,4 +18,14 @@ proposed in Broberg, P. (2005). A comparative review of estimates of the proport
 unchanged genes and the false discovery rate. BMC Bioinformatics, 6, 199. The code belongs to Per Broberg and
 it was a part of the now deprecated package 'SAGx' in BioConductor. 'SAGx' can be downloaded from
 https://www.bioconductor.org/packages//2.10/bioc/html/SAGx.html
+}
+\examples{
+p_seq <- sim_pval(100, 0, 3, 0.1, 0)
+MGF_est(p_seq)
+
+}
+\references{
+Broberg, P. (2005). A comparative review of estimates of the proportion
+unchanged genes and the false discovery rate. BMC Bioinformatics, 6, 199.
+https://doi.org/10.1186/1471-2105-6-199
 }

@@ -20,27 +20,48 @@ library(MTCP)
 
 ## DOS illustration 
 
-Code for running for the illustrations
+The following code produces plots illustrating the DOS method.
 
-Parameters in the dense case
-```{r illustration_set1, eval=FALSE}
+Parameters in the dense case:
+
+```{r illustration_set1, eval = FALSE}
 set.seed(2)
 n <- 100
 mu <- 2
 eps <- 0.2
 ```
 
-Parameters in the sparse case
-```{r illustration_set2, eval=FALSE}
+Parameters in the sparse case:
+
+```{r illustration_set2, eval = FALSE}
 set.seed(1)
 n <- 100
 mu <- 3
 eps <- 0.05
 ```
 
-Code for producing the plot
+Plotting Storey's estimator as a function of $\lambda$:
 
-```{r illustration1, eval= FALSE }
+```{r Storeys_sequence, eval = FALSE}
+k <- eps * n
+pch_type <- c(rep(4, k), rep(20, n - k))
+ord <- order(p_seq)
+col <- c(rep("red", k),rep("black", n - k))
+col <- col[ord]
+pch_type <- pch_type[ord]
+p_seq <- sort(p_seq)
+
+plot(storey_pi1est(p_seq,p_seq)$est, xlab = expression(lambda),ylab="",pch=20)
+title(ylab=expression(hat(pi)[1](lambda)), line=2.5)
+abline(h = eps)
+```
+
+The following code produces:
+
+ * The plot of p-values with the corresponding DOS sequence.
+ * The plot of Storey's sequence of estimators with a vertical line indicating the DOS estimate value.
+
+```{r illustration1, eval = FALSE }
 p_seq <- sim_pval(n, 0, mu, eps, 0)
 k <- n * eps
 pch_type <- c(rep(4, k), rep(20, n - k))
@@ -65,26 +86,70 @@ axis(1)
 legend("bottomright", legend = c(expression(H[1]), expression(H[0])), col = c("red",
     "black"), pch = c(4, 20), cex = 0.8)
 abline(v = which.max(dos_fun(p_seq)$dos_seq), lty = "dashed")
+
+plot(storey_pi1est(p_seq,p_seq)$est, xlab = expression(lambda),ylab="",pch=20)
+title(ylab=expression(hat(pi)[1](lambda)), line=2.5)
+abline(h = eps)
+abline(v = which.max(dos_fun(p_seq)$dos_seq), lty = "dashed")
+```
+
+This code generates a plot of p-values along with the corresponding piece-wise linear function, fitted using the DOS method.
+
+```{r fitting a line, eval = FALSE}
+cp_loc <- dos_fun(p_seq)$cp_loc
+pch_type <- c(rep(4, k), rep(20, n - k))
+pch_type <- pch_type[ord]
+plot(p_seq, pch = pch_type, col=col, ylab = "p-value", xlab = "Rank")
+lines((1:cp_loc)*(p_seq[cp_loc])/cp_loc,col="blue",lwd=2)
+lines(cp_loc:n,(cp_loc:n-cp_loc)*(1-p_seq[cp_loc])/(n-cp_loc)+p_seq[cp_loc],col="blue",lwd=2)
+legend("bottomright", legend = c(expression(H[1]), expression(H[0])), col = c("red",
+    "black"), pch = c(4, 20), cex = 0.8)
+```
+
+This code generates a plot of spacings of p-values along with the corresponding piece-wise constant function, fitted using the DOS method.
+
+```{r fitting spacings, eval = FALSE}
+cp_loc <- dos_fun(p_seq)$cp_loc
+col_spac <- rep(0, n-1)
+for(i in 1:(n-1))
+{
+  if(col[i] == col[i+1])
+    col_spac[i] <- col[i]
+  else col_spac[i] <- "darkred"
+}
+
+pch_type <- car::recode(col_spac, "'black'=20; 'darkred'=15; 'red'=18;")
+
+last_red <- max(which(col == "red"))
+#col_spac <- c(rep("red",last_red-1),rep("black",n-last_red))
+plot(diff(p_seq),pch=pch_type,col=col_spac, ylab = "Spacing")
+lines(c(rep(mean(diff(p_seq[1:cp_loc])),cp_loc),rep(mean(diff(p_seq[-(1:cp_loc)])),n-cp_loc)),col="blue",lwd=2)
+
+legend("topleft", legend = c(expression(H[1]), expression(H[1] ~ "&" ~ H[0]), expression(H[0])), col = c("red","darkred",
+    "black"), pch = c(18, 15, 20), cex = 0.8)
 ```
 
 
+## DOS simulations 
 
-## DOS simulations ##
+### DOS for proportion estimation
 
-Function for comparing different methods. These methods are:
+The code in this section compares the DOS method to different methods for estimating the false null proportion in terms of the estimators' bias, standard deviation, and the Root Mean Squared Error (RMSE). The methods used for comparison are:
 
-* **BH09** - From Cai, T. T., Sun, W., & Xia, Y. (2022). LAWS: A Locally Adaptive Weighting and Screening Approach to Spatial Multiple Testing. Journal of the American Statistical Association, 117(539), 1370–1383.
-* **BOOTSTRAP** - Storey, J. D., Taylor, J. E., & Siegmund, D. (2004). Strong control, conservative point estimation and simultaneous conservative consistency of false discovery rates: a unified approach. Journal of the Royal Statistical Society: Series B (Statistical Methodology), 66(1), 187–205.
+* **BH09** - From Cai, T. T., Sun, W., & Xia, Y. (2022). LAWS: A Locally Adaptive Weighting and Screening Approach to Spatial Multiple Testing. Journal of the American Statistical Association, 117(539), 1370–1383. https://doi.org/10.1080/01621459.2020.1859379
+* **BOOTSTRAP** - Storey, J. D., Taylor, J. E., & Siegmund, D. (2004). Strong control, conservative point estimation and simultaneous conservative consistency of false discovery rates: a unified approach. Journal of the Royal Statistical Society: Series B (Statistical Methodology), 66(1), 187–205.  https://doi.org/10.1111/j.1467-9868.2004.00439.x 
 * **FIX05** - Storey's estimator of the false null proportion with $\lambda=0.5$
-* **FIXMED** - Storey's estimator of the false null proportion with $\lambda=p_{(n/2)}$
-* **JD** - Jiang, H., & Doerge, R. W. (2008). Estimating the Proportion of True Null Hypotheses for Multiple Comparisons. Cancer Informatics, 6, 117693510800600. 
-* **LLF_CONVEST** and **LLF_GRENANDER** - Langaas, M., Lindqvist, B. H., & Ferkingstad, E. (2005). Estimating the Proportion of True Null Hypotheses, with Application to DNA Microarray Data. Journal of the Royal Statistical Society. Series B (Statistical Methodology), 67(4), 555–572
-* **LSL** - Benjamini, Y., & Hochberg, Y. (2000). On the Adaptive Control of the False Discovery Rate in Multiple Testing with Independent Statistics. Journal of Educational and Behavioral Statistics, 25(1), 60.
-* **MGF** & **PRE** - Broberg, P. (2005). A comparative review of estimates of the proportion unchanged genes and the false discovery rate. BMC Bioinformatics, 6, 199. 
-* **MR** - Meinshausen, N., & Rice, J. (2006). Estimating the proportion of false null hypotheses among a large number of independently tested hypotheses. Annals of Statistics, 34(1), 373–393. 
-* **SMOOTHER** - Storey, J. D., & Tibshirani, R. (2003). Statistical significance for genomewide studies. Proceedings of the National Academy of Sciences, 100(16), 9440–9445.
+* **FIXMED** - Storey's estimator of the false null proportion with $\lambda=p_{(n/2)}$, where $\lambda=p_{(n/2)}$ is the median of the $p$-values sequence
+* **JD** - Jiang, H., & Doerge, R. W. (2008). Estimating the Proportion of True Null Hypotheses for Multiple Comparisons. Cancer Informatics, 6, 117693510800600. https://doi.org/10.1177/117693510800600001
+* **LLF_CONVEST** and **LLF_GRENANDER** - Langaas, M., Lindqvist, B. H., & Ferkingstad, E. (2005). Estimating the Proportion of True Null Hypotheses, with Application to DNA Microarray Data. Journal of the Royal Statistical Society. Series B (Statistical Methodology), 67(4), 555–572 https://doi.org/10.1111/j.1467-9868.2005.00515.x 
+* **LSL** - Benjamini, Y., & Hochberg, Y. (2000). On the Adaptive Control of the False Discovery Rate in Multiple Testing with Independent Statistics. Journal of Educational and Behavioral Statistics, 25(1), 60. https://doi.org/10.2307/1165312
+* **MGF** & **PRE** - Broberg, P. (2005). A comparative review of estimates of the proportion unchanged genes and the false discovery rate. BMC Bioinformatics, 6, 199. https://doi.org/10.1186/1471-2105-6-199 
+* **MR** - Meinshausen, N., & Rice, J. (2006). Estimating the proportion of false null hypotheses among a large number of independently tested hypotheses. Annals of Statistics, 34(1), 373–393. https://doi.org/10.1214/009053605000000741 
+* **SMOOTHER** - Storey, J. D., & Tibshirani, R. (2003). Statistical significance for genomewide studies. Proceedings of the National Academy of Sciences, 100(16), 9440–9445. https://doi.org/10.1073/pnas.1530509100 
 
-```{r dependencies}
+The following R packages are required to compute some of the methods mentioned above:
+
+```{r dependencies, eval = FALSE}
 if (!requireNamespace("fdrtool", quietly = TRUE)) {
     install.packages("fdrtool", quietly = TRUE)
   }
@@ -100,6 +165,7 @@ library("qvalue")
 library("limma")
 ```
 
+The following function generates a table that reports the bias, standard deviation, and Root Mean Squared Error (RMSE) of different proportion estimators.
 
 ```{r complete testing function, eval = FALSE}
 dos_test_gaussian <- function(n, eps, mu, N) {
@@ -126,7 +192,7 @@ dos_test_gaussian <- function(n, eps, mu, N) {
                                                  diagnostic.plot = FALSE)
     df$PRE[i] <- 1 - PRE_est(p_seq)
     df$MGF[i] <- 1 - MGF_est(p_seq)
-    df$JD[i] <- 1 - min(1, JD_est(p_seq, 100))
+    df$JD[i] <- 1 - min(1, JD_est(p_seq, 1000))
     df$LLF_GRENANDER[i] <- 1 - LLF_Grenander_est(p_seq)
     df$LLF_CONVEST[i] <- 1 - limma::convest(p_seq)
     df$MR[i] <- MR_est(p_seq)
@@ -142,14 +208,13 @@ dos_test_gaussian <- function(n, eps, mu, N) {
   
   return((res))
 }
-
 ```
 
-The following code produces a latex table of simulation results for sample of size $n=1000$ for various $\mu$ and $\varepsilon$ values and the simulations are based on $N=200$ repetitions.
-
+The following code produces a latex table of the simulation results obtained using the function `dos_test_gaussian` for sample of size $n=1000$ for various $\mu$ and $\varepsilon$ values and the simulations are based on $N=200$ repetitions.
 
 ```{r simulations, eval=FALSE}
 set.seed(10)
+N <- 200
 n_seq <- rep(1000, 8)
 eps_seq <- c(0.01, 0.03, 0.05, 0.1, 0.1, 0.2, 0.2, 0.3)
 mu_seq <- c(3.5, 3.5, 3, 2, 3, 2, 3, 3)
@@ -157,7 +222,7 @@ mu_seq <- c(3.5, 3.5, 3, 2, 3, 2, 3, 3)
 table_list <- list()
 for (i in 1:length(n_seq)) {
   table_list[[i]] <- round(dos_test_gaussian(n_seq[i], eps_seq[i],
-                                             mu_seq[i], 200) * n_seq[i], 1)
+                                             mu_seq[i], N) * n_seq[i], 1)
   rownames(table_list[[i]]) <- NULL
 }
 
@@ -176,6 +241,7 @@ print(xtable(combined_table), add.to.row = add_rows, include.rownames = FALSE)
 
 ```
 
+Similarly to  `dos_test_gaussian` the following function generates a table that reports the bias, standard deviation, and Root Mean Squared Error (RMSE) of different proportion estimators. Some of the methods used in `dos_test_gaussian` do not work for smaller sample values and are excluded.
 
 ```{r small sample testing function, eval = FALSE}
 dos_test_gaussian_small=function(n,eps,mu,N)
@@ -246,11 +312,13 @@ add_rows$command <- paste("\\hline\n", "\\multicolumn{10}{c}{",
 print(xtable(combined_table), add.to.row = add_rows, include.rownames = FALSE)
 ```
 
-## DOS - superuniform p-values 
+### DOS when the true null p-values are superuniform
 
-The following code produces plots that compare the false null proportion estimator based on the randomised p-values and the DOS change-point estimator
+When the $p$-values are superuniform, we modify the DOS false null proportion estimator and use the change-point estimator as the estimator for the number of the false null $p$-values. We compare this modified DOS estimator with the method
+based on the randomised p-values by Hoang, A.-T., & Dickhaus, T. (2022). On the usage of randomized p-values in the Schweder–Spjøtvoll estimator. Annals of the Institute of Statistical Mathematics, 74(2), 289–319.
+ https://doi.org/10.1007/s10463-021-00797-0and. The simulation setting is as described in that paper.
 
-```{r superuniform}
+```{r superuniform, eval = FALSE}
 r <- 1:10
 pi1 <- 0.25
 rho <- 0.25
@@ -308,23 +376,24 @@ matplot(mat, type = "b", pch = 1:3, main = "MSE", xlab = "r", ylab = "")
 legend("topright", colnames(mat), col = seq_len(ncol(mat)), pch = 1:3)
 ```
 
-## DOS - FDR control
+### DOS - FDR control
 
-In this section we recreate the Figures 2, 3 and 4 from Blanchard, G., & Roquain, É. (2009). Adaptive false discovery rate control under independence and dependence. Journal of Machine Learning Research, 10, 2837–2871. We only include the adaptive procedures using Storey-based estimators and the DOS estimator of the proportion.
+In this section we recreate the Figures 2, 3 and 4 from Blanchard, G., & Roquain, É. (2009). Adaptive false discovery rate control under independence and dependence. Journal of Machine Learning Research, 10, 2837–2871. http://jmlr.org/papers/v10/blanchard09a.html.
+We include the adaptive procedures using Storey-based estimators and the DOS estimator of the proportion.
 
-The following code produces 3 figures, showing the average proportion estimates, FDR and power of different adaptive BH methods as a function of the true null proportion. 
+The following code produces 3 figures, showing the average estimated proportion value, FDR and power of different adaptive BH methods as a function of the true null proportion. 
 
 ```{r fdr control pi0, eval = FALSE}
 n <- 100
 N <- 10000
 mu <- 3
 pi0 <- 0.5 + 0.5 * (1:15-1) / 15
-rho <- 0.5
+rho <- 0.2
 alpha <- 0.05
-arr <- array(data = rep(0, 3 * 6 * length(pi0)),
-             dim = c(3, 6, length(pi0)),
+arr <- array(data = rep(0, 3 * 7 * length(pi0)),
+             dim = c(3, 7, length(pi0)),
              dimnames = list(c("pi0est", "FDR", "power"),
-                             c("DOS-1", "DOS-1/2", "oracle", "ST-alpha", "ST-MED", "ST-1/2"),
+                             c("DOS-1", "DOS-1/2", "oracle", "ST-alpha", "ST-MED", "ST-1/2", "LSL"),
                              pi0))
 
 div <- function(x, y) {
@@ -333,9 +402,375 @@ div <- function(x, y) {
 
 for (j in 1:length(pi0)) {
   
-  pi0est_dos1 <- pi0est_dos12 <- pi0est_alpha <- pi0est_12 <- pi0est_med <- rep(0, N)
-  fdr_dos1 <- fdr_dos12 <- fdr_alpha <- fdr_oracle <- fdr_12 <- fdr_med <- rep(0, N)
-  power_dos1 <- power_dos12 <- power_alpha <- power_oracle <- power_12 <- power_med <- rep(0, N)
+  pi0est_dos1 <- pi0est_dos12 <- pi0est_alpha <- pi0est_12 <-  pi0est_lsl <-
+    pi0est_med <- rep(0, N) 
+  fdr_dos1 <- fdr_dos12 <- fdr_alpha <- fdr_oracle <- fdr_12 <- fdr_med <- fdr_lsl <-   rep(0, N)
+  power_dos1 <- power_dos12 <- power_alpha <- power_oracle <- power_12 <- power_med <- power_lsl <-  rep(0, N)
+
+  for (i in 1:N) {
+    
+    if (rho > 0) {
+      eps <- sqrt(rho) * rnorm(1) + sqrt(1 - rho) * rnorm(n)
+    } else {
+      eps <- rnorm(n)
+    }
+    
+    x <- eps + c(rep(0, floor(pi0[j] * n)), rep(mu, n - floor(n * pi0[j])))
+    sig <- c(rep(0, floor(pi0[j] * n)), rep(1, n - floor(pi0[j] * n)))
+    sig <- sig[order(1 - pnorm(x))]
+    p_seq <- sort(1 - pnorm(x))
+    
+    pi0est_dos1[i] <- 1 - storey_pi1est(p_seq[dos_fun(p_seq, alpha = 1)$cp_loc], p_seq)$est
+    pi0est_dos12[i] <- 1 - storey_pi1est(p_seq[dos_fun(p_seq, alpha = 1/2)$cp_loc], p_seq)$est
+    pi0est_alpha[i] <- 1 - storey_pi1est(alpha, p_seq, mod = TRUE)$est
+    pi0est_12[i] <- 1 - storey_pi1est(1/2, p_seq, mod = TRUE)$est
+    pi0est_med[i] <- 1 - storey_pi1est(p_seq[n/2], p_seq, mod = TRUE)$est
+    pi0est_lsl[i] <- fdrtool::pval.estimate.eta0(p_seq, method = "adaptive",
+                                                 diagnostic.plot = FALSE)
+    
+    
+    abh_dos1 <- bh_adaptive(p_seq, pi0est_dos1[i], alpha, sig)
+    fdr_dos1[i] <- abh_dos1$fdr
+    power_dos1[i] <- abh_dos1$power
+    
+    abh_dos12 <- bh_adaptive(p_seq, pi0est_dos12[i], alpha, sig)
+    fdr_dos12[i] <- abh_dos12$fdr
+    power_dos12[i] <- abh_dos12$power
+    
+    abh_alpha <- bh_adaptive(p_seq, pi0est_alpha[i], alpha, sig)
+    fdr_alpha[i] <- abh_alpha$fdr
+    power_alpha[i] <- abh_alpha$power
+    
+    abh_oracle <- bh_adaptive(p_seq, pi0[j], alpha, sig)
+    fdr_oracle[i] <- abh_oracle$fdr
+    power_oracle[i] <- abh_oracle$power
+    
+    abh_12 <- bh_adaptive(p_seq, pi0est_12[i], alpha, sig)
+    fdr_12[i] <- abh_12$fdr
+    power_12[i] <- abh_12$power
+    
+    abh_med <- bh_adaptive(p_seq, pi0est_med[i], alpha, sig)
+    fdr_med[i] <- abh_med$fdr
+    power_med[i] <- abh_med$power
+    
+    abh_lsl <- bh_adaptive(p_seq, pi0est_lsl[i], alpha, sig)
+    fdr_lsl[i] <- abh_lsl$fdr
+    power_lsl[i] <- abh_lsl$power
+  }
+  
+  arr["pi0est", "DOS-1", toString(pi0[j])] <- mean(pi0est_dos1)
+  arr["pi0est", "DOS-1/2", toString(pi0[j])] <- mean(pi0est_dos12)
+  arr["pi0est", "ST-alpha", toString(pi0[j])] <- mean(pi0est_alpha)
+  arr["pi0est", "oracle", toString(pi0[j])] <- pi0[j]
+  arr["pi0est", "ST-1/2", toString(pi0[j])] <- mean(pi0est_12)
+  arr["pi0est", "ST-MED", toString(pi0[j])] <- mean(pi0est_med)
+  arr["pi0est", "LSL", toString(pi0[j])] <- mean(pi0est_lsl)
+  
+  arr["FDR", "DOS-1", toString(pi0[j])] <- mean(fdr_dos1)
+  arr["FDR", "DOS-1/2", toString(pi0[j])] <- mean(fdr_dos12)
+  arr["FDR", "ST-alpha", toString(pi0[j])] <- mean(fdr_alpha)
+  arr["FDR", "oracle", toString(pi0[j])] <- mean(fdr_oracle)  
+  arr["FDR", "ST-1/2", toString(pi0[j])] <- mean(fdr_12) 
+  arr["FDR", "ST-MED", toString(pi0[j])] <- mean(fdr_med) 
+  arr["FDR", "LSL", toString(pi0[j])] <- mean(fdr_lsl) 
+  
+  arr["power", "DOS-1", toString(pi0[j])] <- mean(div(power_dos1, power_oracle))
+  arr["power", "DOS-1/2", toString(pi0[j])] <- mean(div(power_dos12, power_oracle))
+  arr["power", "ST-alpha", toString(pi0[j])] <- mean(div(power_alpha, power_oracle))
+  arr["power", "oracle", toString(pi0[j])] <- mean(div(power_oracle, power_oracle))
+  arr["power", "ST-1/2", toString(pi0[j])] <- mean(div(power_12, power_oracle))
+  arr["power", "ST-MED", toString(pi0[j])] <- mean(div(power_med, power_oracle))
+  arr["power", "LSL", toString(pi0[j])] <- mean(div(power_lsl, power_oracle))
+}
+
+mat_pi0 <- t(arr["pi0est", , ])
+matplot(pi0, mat_pi0, type = "b", pch = 1:7, col = seq_len(ncol(mat_pi0)), ylab = expression(hat(pi)[0]), xlab= expression(pi[0]), main = "Average proportion estimates")
+legend("bottomright", colnames(mat_pi0), col = seq_len(ncol(mat_pi0)), cex = 0.8, pch=1:7)
+
+mat_fdr <- t(arr["FDR", , ])
+matplot(pi0, mat_fdr, type = "b", pch = 1:7, col = seq_len(ncol(mat_pi0)), main = "FDR", ylab = "",  xlab= expression(pi[0]))
+legend("topleft", colnames(mat_fdr), col = seq_len(ncol(mat_fdr)), cex = 0.8, pch = 1:7)
+abline(h = alpha)
+
+mat_power <- t(arr["power", , ])
+matplot(pi0, mat_power, type = "b", pch = 1:7, col = seq_len(ncol(mat_power)), main = "Relative power", ylab = "", xlab= expression(pi[0]))
+legend("topleft", colnames(mat_power), col = seq_len(ncol(mat_power)), cex = 0.8, pch = 1:7)
+```
+
+The following code produces 3 figures, showing the average proportion estimates, FDR and power of different adaptive BH methods as a function of the mean under the alternative.
+
+```{r fdr control mu, eval = FALSE}
+alpha <- 0.05
+rho <- 0.5
+mu <- seq(1, 5.5, by = 0.5)
+pi0 <- 0.75
+
+arr <- array(
+  data = rep(0, 3 * 7 * length(mu)),
+  dim = c(3, 7, length(mu)),
+  dimnames = list(
+    c("pi0est", "FDR", "power"),
+    c("DOS-1", "DOS-1/2", "oracle", "ST-alpha", "ST-MED", "ST-1/2", "LSL"),
+    mu
+  )
+)
+
+N <- 10000
+
+for (j in 1:length(mu)) {
+  
+  pi0est_dos1 <- pi0est_dos12 <- pi0est_alpha <- pi0est_12 <-  pi0est_lsl <-
+    pi0est_med <- rep(0, N) 
+  fdr_dos1 <- fdr_dos12 <- fdr_alpha <- fdr_oracle <- fdr_12 <- fdr_med <- fdr_lsl <-   rep(0, N)
+  power_dos1 <- power_dos12 <- power_alpha <- power_oracle <- power_12 <- power_med <- power_lsl <-  rep(0, N)
+  n <- 100
+  
+  for (i in 1:N) {
+    if (rho > 0) {
+      eps <- sqrt(rho) * rnorm(1) + sqrt(1 - rho) * rnorm(n)
+    } else {
+      eps <- rnorm(n)
+    }
+    
+    x <- eps + c(rep(0, floor(pi0 * n)), rep(mu[j], n - floor(n * pi0)))
+    sig <- c(rep(0, floor(pi0 * n)), rep(1, n - floor(pi0 * n)))
+    sig <- sig[order(1 - pnorm(x))]
+    p_seq <- sort(1 - pnorm(x))
+    
+    pi0est_dos1[i] <- 1 - storey_pi1est(p_seq[dos_fun(p_seq, alpha = 1)$cp_loc], p_seq)$est
+    pi0est_dos12[i] <- 1 - storey_pi1est(p_seq[dos_fun(p_seq, alpha = 1/2)$cp_loc], p_seq)$est
+    pi0est_alpha[i] <- 1 - storey_pi1est(alpha, p_seq, mod = TRUE)$est
+    pi0est_12[i] <- 1 - storey_pi1est(1/2, p_seq, mod = TRUE)$est
+    pi0est_med[i] <- 1 - storey_pi1est(p_seq[n/2], p_seq, mod = TRUE)$est
+    pi0est_lsl[i] <- fdrtool::pval.estimate.eta0(p_seq, method = "adaptive",
+                                                 diagnostic.plot = FALSE)
+    
+    abh_dos1 <- bh_adaptive(p_seq, pi0est_dos1[i], alpha, sig)
+    fdr_dos1[i] <- abh_dos1$fdr
+    power_dos1[i] <- abh_dos1$power
+    
+    abh_dos12 <- bh_adaptive(p_seq, pi0est_dos12[i], alpha, sig)
+    fdr_dos12[i] <- abh_dos12$fdr
+    power_dos12[i] <- abh_dos12$power
+    
+    abh_alpha <- bh_adaptive(p_seq, pi0est_alpha[i], alpha, sig)
+    fdr_alpha[i] <- abh_alpha$fdr
+    power_alpha[i] <- abh_alpha$power
+    
+    abh_oracle <- bh_adaptive(p_seq, pi0, alpha, sig)
+    fdr_oracle[i] <- abh_oracle$fdr
+    power_oracle[i] <- abh_oracle$power
+    
+    abh_12 <- bh_adaptive(p_seq, pi0est_12[i], alpha, sig)
+    fdr_12[i] <- abh_12$fdr
+    power_12[i] <- abh_12$power
+    
+    abh_med <- bh_adaptive(p_seq, pi0est_med[i], alpha, sig)
+    fdr_med[i] <- abh_med$fdr
+    power_med[i] <- abh_med$power
+        
+    abh_lsl <- bh_adaptive(p_seq, pi0est_lsl[i], alpha, sig)
+    fdr_lsl[i] <- abh_lsl$fdr
+    power_lsl[i] <- abh_lsl$power
+    
+  }
+  
+  arr["pi0est", "DOS-1", toString(mu[j])] <- mean(pi0est_dos1)
+  arr["pi0est", "DOS-1/2", toString(mu[j])] <- mean(pi0est_dos12)
+  arr["pi0est", "ST-alpha", toString(mu[j])] <- mean(pi0est_alpha)
+  arr["pi0est", "oracle", toString(mu[j])] <- pi0
+  arr["pi0est", "ST-1/2", toString(mu[j])] <- mean(pi0est_12)
+  arr["pi0est", "ST-MED", toString(mu[j])] <- mean(pi0est_med)
+  arr["pi0est", "LSL", toString(mu[j])] <- mean(pi0est_lsl)
+  
+  arr["FDR", "DOS-1", toString(mu[j])] <- mean(fdr_dos1)
+  arr["FDR", "DOS-1/2", toString(mu[j])] <- mean(fdr_dos12)
+  arr["FDR", "ST-alpha", toString(mu[j])] <- mean(fdr_alpha)
+  arr["FDR", "oracle", toString(mu[j])] <- mean(fdr_oracle)
+  arr["FDR", "ST-1/2", toString(mu[j])] <- mean(fdr_12)
+  arr["FDR", "ST-MED", toString(mu[j])] <- mean(fdr_med)
+  arr["FDR", "LSL", toString(mu[j])] <- mean(fdr_lsl)
+  
+  arr["power", "DOS-1", toString(mu[j])] <- mean(div(power_dos1, power_oracle))
+  arr["power", "DOS-1/2", toString(mu[j])] <- mean(div(power_dos12, power_oracle))
+  arr["power", "ST-alpha", toString(mu[j])] <- mean(div(power_alpha, power_oracle))
+  arr["power", "oracle", toString(mu[j])] <- mean(div(power_oracle, power_oracle))
+  arr["power", "ST-1/2", toString(mu[j])] <- mean(div(power_12, power_oracle))
+  arr["power", "ST-MED", toString(mu[j])] <- mean(div(power_med, power_oracle))
+  arr["power", "LSL", toString(mu[j])] <- mean(div(power_lsl, power_oracle))
+}
+
+mat_pi0 <- t(arr["pi0est", , ])
+matplot(mu, mat_pi0, type = "b", pch = 1:7, col = seq_len(ncol(mat_pi0)), xlab = expression(mu), ylab = expression(hat(pi)[0]), main = "Average proportion estimates")
+legend("topright", colnames(mat_pi0), col = seq_len(ncol(mat_pi0)), cex = 0.8, pch= 1:7)
+
+mat_fdr <- t(arr["FDR", , ])
+matplot(mu, mat_fdr, type = "b", xlab = expression(mu), pch = 1:7, col = seq_len(ncol(mat_fdr)), main = "FDR", ylab = "")
+legend("topleft", colnames(mat_fdr), col = seq_len(ncol(mat_fdr)), cex = 0.8, pch = 1:7)
+abline(h = alpha)
+
+mat_power <- t(arr["power", , ])
+matplot(mu, mat_power, type = "b", xlab = expression(mu), pch = 1:7, col = seq_len(ncol(mat_power)), main = "Relative power", ylab = "")
+legend("topright", colnames(mat_power), col = seq_len(ncol(mat_power)), cex = 0.8, pch = 1:7)
+```
+The following code produces 3 figures, showing the average proportion estimates, FDR and power of different adaptive BH methods as a function of the correlation coefficient $\rho$.
+
+```{r fdr control rho, eval = FALSE}
+rho <- (1:31 - 1) / 30
+pi0 <- 0.75
+mu <- 3
+n <- 100
+N <- 1000
+arr <- array(
+  data = rep(0, 3 * 7 * length(rho)),
+  dim = c(3, 7, length(rho)),
+  dimnames = list(
+    c("pi0est", "FDR", "power"),
+    c("DOS-1", "DOS-1/2", "oracle", "ST-alpha", "ST-MED", "ST-1/2", "LSL"),
+    rho
+  )
+)
+
+for (j in 1:length(rho)) {
+  
+  pi0est_dos1 <- pi0est_dos12 <- pi0est_alpha <- pi0est_12 <-  pi0est_lsl <-
+    pi0est_med <- rep(0, N) 
+  fdr_dos1 <- fdr_dos12 <- fdr_alpha <- fdr_oracle <- fdr_12 <- fdr_med <- fdr_lsl <-   rep(0, N)
+  power_dos1 <- power_dos12 <- power_alpha <- power_oracle <- power_12 <- power_med <- power_lsl <-  rep(0, N)
+  
+  for (i in 1:N) {
+    if (rho[j] > 0) {
+      eps <- sqrt(rho[j]) * rnorm(1) + sqrt(1 - rho[j]) * rnorm(n)
+    } else {
+      eps <- rnorm(n)
+    }
+    
+    x <- eps + c(rep(0, floor(pi0 * n)), rep(mu, n - floor(n * pi0)))
+    sig <- c(rep(0, floor(pi0 * n)), rep(1, n - floor(pi0 * n)))
+    sig <- sig[order(1 - pnorm(x))]
+    p_seq <- sort(1 - pnorm(x))
+    
+    pi0est_dos1[i] <- 1 - storey_pi1est(p_seq[dos_fun(p_seq, alpha = 1)$cp_loc], p_seq)$est
+    pi0est_dos12[i] <- 1 - storey_pi1est(p_seq[dos_fun(p_seq, alpha = 1/2)$cp_loc], p_seq)$est
+    pi0est_alpha[i] <- 1 - storey_pi1est(alpha, p_seq, mod = TRUE)$est
+    pi0est_12[i] <- 1 - storey_pi1est(1/2, p_seq, mod = TRUE)$est
+    pi0est_med[i] <- 1 - storey_pi1est(p_seq[n/2], p_seq, mod = TRUE)$est
+    pi0est_lsl[i] <- fdrtool::pval.estimate.eta0(p_seq, method = "adaptive",
+                                                 diagnostic.plot = FALSE)
+    
+    abh_dos1 <- bh_adaptive(p_seq, pi0est_dos1[i], alpha, sig)
+    fdr_dos1[i] <- abh_dos1$fdr
+    power_dos1[i] <- abh_dos1$power
+    
+    abh_dos12 <- bh_adaptive(p_seq, pi0est_dos12[i], alpha, sig)
+    fdr_dos12[i] <- abh_dos12$fdr
+    power_dos12[i] <- abh_dos12$power
+
+    abh_alpha <- bh_adaptive(p_seq, pi0est_alpha[i], alpha, sig)
+    fdr_alpha[i] <- abh_alpha$fdr
+    power_alpha[i] <- abh_alpha$power
+    
+    abh_oracle <- bh_adaptive(p_seq, pi0, alpha, sig)
+    fdr_oracle[i] <- abh_oracle$fdr
+    power_oracle[i] <- abh_oracle$power
+    
+    abh_12 <- bh_adaptive(p_seq, pi0est_12[i], alpha, sig)
+    fdr_12[i] <- abh_12$fdr
+    power_12[i] <- abh_12$power
+    
+    abh_med <- bh_adaptive(p_seq, pi0est_med[i], alpha, sig)
+    fdr_med[i] <- abh_med$fdr
+    power_med[i] <- abh_med$power
+    
+    abh_lsl <- bh_adaptive(p_seq, pi0est_lsl[i], alpha, sig)
+    fdr_lsl[i] <- abh_lsl$fdr
+    power_lsl[i] <- abh_lsl$power
+  }
+  
+  arr["pi0est", "DOS-1", toString(rho[j])] <- mean(pi0est_dos1)
+  arr["pi0est", "DOS-1/2", toString(rho[j])] <- mean(pi0est_dos12)
+  arr["pi0est", "ST-alpha", toString(rho[j])] <- mean(pi0est_alpha)
+  arr["pi0est", "oracle", toString(rho[j])] <- pi0
+  arr["pi0est", "ST-1/2", toString(rho[j])] <- mean(pi0est_12)
+  arr["pi0est", "ST-MED", toString(rho[j])] <- mean(pi0est_med)
+  arr["pi0est", "LSL", toString(rho[j])] <- mean(pi0est_lsl)
+  
+  arr["FDR", "DOS-1", toString(rho[j])] <- mean(fdr_dos1)
+  arr["FDR", "DOS-1/2", toString(rho[j])] <- mean(fdr_dos12)
+  arr["FDR", "ST-alpha", toString(rho[j])] <- mean(fdr_alpha)
+  arr["FDR", "oracle", toString(rho[j])] <- mean(fdr_oracle)
+  arr["FDR", "ST-1/2", toString(rho[j])] <- mean(fdr_12)
+  arr["FDR", "ST-MED", toString(rho[j])] <- mean(fdr_med)
+  arr["FDR", "LSL", toString(rho[j])] <- mean(fdr_lsl)
+  
+  arr["power", "DOS-1", toString(rho[j])] <- mean(div(power_dos1, power_oracle))
+  arr["power", "DOS-1/2", toString(rho[j])] <- mean(div(power_dos12, power_oracle))
+  arr["power", "ST-alpha", toString(rho[j])] <- mean(div(power_oracle, power_alpha))
+  arr["power", "oracle", toString(rho[j])] <- mean(div(power_oracle, power_oracle))
+  arr["power", "ST-1/2", toString(rho[j])] <- mean(div(power_oracle, power_12))
+  arr["power", "ST-MED", toString(rho[j])] <- mean(div(power_oracle, power_med))
+  arr["power", "LSL", toString(rho[j])] <- mean(div(power_oracle, power_lsl))
+}
+
+mat_pi0 <- t(arr["pi0est", , ])
+matplot(rho, mat_pi0, type = "b", xlab = expression(rho), pch = 1:7, col = seq_len(ncol(mat_pi0)), ylab = expression(hat(pi)[0]), main = "Average proportion estimates")
+legend("topright", colnames(mat_pi0), col = seq_len(ncol(mat_pi0)), cex = 0.8, pch = 1:7)
+
+mat_fdr <- t(arr["FDR", , ])
+matplot(rho, mat_fdr, type = "b", xlab = expression(rho), pch = 1:7, col = seq_len(ncol(mat_fdr)), main = "FDR", ylab = "")
+legend("topleft", colnames(mat_fdr), col = seq_len(ncol(mat_fdr)), cex = 0.8, pch = 1:7)
+abline(h = alpha)
+
+mat_power <- t(arr["power", , ])
+matplot(rho, mat_power, type = "b", xlab = expression(rho), pch = 1:7, col = seq_len(ncol(mat_power)), main = "Relative power", ylab = "")
+legend("topleft", colnames(mat_power), col = seq_len(ncol(mat_power)), cex = 0.8, pch = 1:7)
+```
+
+
+#### DOS - FDR control large sample
+
+To include the $q$-value method, (that uses *SMOOTHER* proportion estimator) which is the most popular method used for adaptive FDR control in applied literature, sample size needs to be larger (>500) and the method in general does not work for correlated $p$-values (in both cases the number of $p$-values close to 1 is not large enough for the proportion estimator to be computed)
+
+The following code produces 3 figures, showing the average estimated proportion value, FDR and power of different adaptive BH methods as a function of the true null proportion. 
+
+```{r fdr control smoother pi0 , eval = FALSE}
+q_value_adaptive=function(p_seq, pi0, alpha, sig)
+{
+  n <- length(p_seq)
+  res <- NULL
+  q_est=sum(qvalue(p_seq,fdr.level=alpha,pi0=pi0)$significant)
+  res$est <- q_est
+  if (q_est == 0) {
+    res$fdr <- 0
+    res$power <- 0
+  } else {
+    res$fdr <- sum(1 - sig[1:q_est]) / q_est
+    res$power <- sum(sig[1:q_est]) / sum(sig)
+  }
+  return(res)
+}
+
+n <- 500
+N <- 1000
+mu <- 3
+pi0 <- 0.5 + 0.5 * (1:15-1) / 15
+rho=0
+alpha <- 0.05
+arr <- array(data = rep(0, 3 * 8 * length(pi0)),
+             dim = c(3, 8, length(pi0)),
+             dimnames = list(c("pi0est", "FDR", "power"),
+                             c("smoother", "bh", "DOS-1", "DOS-1/2", "oracle", "ST-alpha", "ST-MED", "ST-1/2"),
+                             pi0))
+
+div <- function(x, y) {
+  ifelse(y == 0, 1, x / y)
+}
+
+for (j in 1:length(pi0)) {
+  
+  pi0est_smoother <- pi0est_bh <- pi0est_dos1 <- pi0est_dos12 <- pi0est_alpha <- pi0est_12 <- pi0est_med <- rep(0, N)
+  fdr_smoother <-  fdr_bh <- fdr_dos1 <- fdr_dos12 <- fdr_alpha <- fdr_oracle <- fdr_12 <- fdr_med <- rep(0, N)
+  power_smoother <- power_bh <- power_dos1 <- power_dos12 <- power_alpha <- power_oracle <- power_12 <- power_med <- rep(0, N)
   stop_med <- stop_dos <- rep(0, N)
   
   for (i in 1:N) {
@@ -356,9 +791,20 @@ for (j in 1:length(pi0)) {
     pi0est_alpha[i] <- 1 - storey_pi1est(alpha, p_seq, mod = TRUE)$est
     pi0est_12[i] <- 1 - storey_pi1est(1/2, p_seq, mod = TRUE)$est
     pi0est_med[i] <- 1 - storey_pi1est(p_seq[n/2], p_seq, mod = TRUE)$est
+    pi0est_smoother[i] <- qvalue::pi0est(p_seq, pi0.method = "smoother")$pi0
+    pi0est_bh[i] <- fdrtool::pval.estimate.eta0(p_seq, method = "adaptive",
+                                                diagnostic.plot = FALSE)
     
     stop_med[i] <- p_seq[n/2]
     stop_dos[i] <- p_seq[dos_fun(p_seq)$cp_loc]
+    
+    abh_bh <- bh_adaptive(p_seq, pi0est_bh[i], alpha, sig)
+    fdr_bh[i] <- abh_bh$fdr
+    power_bh[i] <- abh_bh$power
+    
+    abh_smoother <- q_value_adaptive(p_seq, pi0est_smoother[i], alpha, sig)
+    fdr_smoother[i] <- abh_smoother$fdr
+    power_smoother[i] <- abh_smoother$power
     
     abh_dos1 <- bh_adaptive(p_seq, pi0est_dos1[i], alpha, sig)
     fdr_dos1[i] <- abh_dos1$fdr
@@ -385,6 +831,8 @@ for (j in 1:length(pi0)) {
     power_med[i] <- abh_med$power
   }
   
+  arr["pi0est", "bh", toString(pi0[j])] <- mean(pi0est_bh)
+  arr["pi0est", "smoother", toString(pi0[j])] <- mean(pi0est_smoother)
   arr["pi0est", "DOS-1", toString(pi0[j])] <- mean(pi0est_dos1)
   arr["pi0est", "DOS-1/2", toString(pi0[j])] <- mean(pi0est_dos12)
   arr["pi0est", "ST-alpha", toString(pi0[j])] <- mean(pi0est_alpha)
@@ -392,14 +840,17 @@ for (j in 1:length(pi0)) {
   arr["pi0est", "ST-1/2", toString(pi0[j])] <- mean(pi0est_12)
   arr["pi0est", "ST-MED", toString(pi0[j])] <- mean(pi0est_med)
   
+  arr["FDR", "bh", toString(pi0[j])] <- mean(fdr_bh)
+  arr["FDR", "smoother", toString(pi0[j])] <- mean(fdr_smoother)
   arr["FDR", "DOS-1", toString(pi0[j])] <- mean(fdr_dos1)
   arr["FDR", "DOS-1/2", toString(pi0[j])] <- mean(fdr_dos12)
   arr["FDR", "ST-alpha", toString(pi0[j])] <- mean(fdr_alpha)
-  arr["FDR", "oracle", toString(pi0[j])] <- mean(fdr_oracle)  
-  arr["FDR", "ST-1/2", toString(pi0[j])] <- mean(fdr_12) 
-  arr["FDR", "ST-MED", toString(pi0[j])] <- mean(fdr_med) 
-
+  arr["FDR", "oracle", toString(pi0[j])] <- mean(fdr_oracle)
+  arr["FDR", "ST-1/2", toString(pi0[j])] <- mean(fdr_12)
+  arr["FDR", "ST-MED", toString(pi0[j])] <- mean(fdr_med)
   
+  arr["power", "bh", toString(pi0[j])] <- mean(div(power_bh, power_oracle))
+  arr["power", "smoother", toString(pi0[j])] <- mean(div(power_smoother, power_oracle))
   arr["power", "DOS-1", toString(pi0[j])] <- mean(div(power_dos1, power_oracle))
   arr["power", "DOS-1/2", toString(pi0[j])] <- mean(div(power_dos12, power_oracle))
   arr["power", "ST-alpha", toString(pi0[j])] <- mean(div(power_alpha, power_oracle))
@@ -410,220 +861,17 @@ for (j in 1:length(pi0)) {
 }
 
 mat_pi0 <- t(arr["pi0est", , ])
-matplot(pi0, mat_pi0, type = "b", pch = 1:6, ylab = expression(hat(pi)[0]), xlab= expression(pi[0]), main = "Average proportion estimates")
-legend("bottomright", colnames(mat_pi0), col = seq_len(ncol(mat_pi0)), cex = 0.8, pch=1:6)
+matplot(pi0, mat_pi0, type = "b", pch = 1:8, col = seq_len(ncol(mat_pi0)), ylab = expression(hat(pi)[0]), xlab= expression(pi[0]), main = "Average proportion estimates")
+legend("bottomright", colnames(mat_pi0), col = seq_len(ncol(mat_pi0)), cex = 0.8, pch=1:8)
 
-mat_fdr <- t(arr["FDR", , ])
-matplot(pi0, mat_fdr, type = "b", pch = 1:6, main = "FDR", ylab = "",  xlab= expression(pi[0]))
-legend("topleft", colnames(mat_fdr), col = seq_len(ncol(mat_fdr)), cex = 0.8, pch = 1:6)
+mat_fdr <- t(arr["FDR",, ])
+matplot(pi0, mat_fdr, type = "b", pch = 1:8, col = seq_len(ncol(mat_fdr)), main = "FDR", ylab = "",  xlab= expression(pi[0]))
+legend("topleft", colnames(mat_fdr), col = seq_len(ncol(mat_fdr)), cex = 0.8, pch = 1:8)
 abline(h = alpha)
 
 mat_power <- t(arr["power", , ])
-matplot(pi0, mat_power, type = "b", pch = 1:6, main = "Relative power", ylab = "", xlab= expression(pi[0]))
-legend("topleft", colnames(mat_power), col = seq_len(ncol(mat_power)), cex = 0.8, pch = 1:6)
+matplot(pi0, mat_power, type = "b", pch = 1:8, col = seq_len(ncol(mat_power)), main = "Relative power", ylab = "", xlab= expression(pi[0]))
+legend("topleft", colnames(mat_power), col = seq_len(ncol(mat_power)), cex = 0.8, pch = 1:8)
+abline(h=1)
 ```
 
-The following code produces 3 figures, showing the average proportion estimates, FDR and power of different adaptive BH methods as a function of the mean under the alternative.
-
-```{r fdr control mu, eval = FALSE}
-alpha <- 0.05
-rho <- 0.5
-mu <- seq(1, 5.5, by = 0.5)
-pi0 <- 0.75
-
-arr <- array(
-  data = rep(0, 3 * 6 * length(mu)),
-  dim = c(3, 6, length(mu)),
-  dimnames = list(
-    c("pi0est", "FDR", "power"),
-    c("DOS-1", "DOS-1/2", "oracle", "ST-alpha", "ST-MED", "ST-1/2"),
-    mu
-  )
-)
-
-N <- 10000
-
-for (j in 1:length(mu)) {
-  
-  pi0est_dos1 <- pi0est_dos12 <- pi0est_alpha <- pi0est_12 <- pi0est_med <- rep(0, N)
-  fdr_dos1 <- fdr_dos1 <- fdr_alpha <- fdr_oracle <- fdr_12 <- fdr_med <- rep(0, N)
-  power_dos <- power_alpha <- power_oracle <- power_12 <- power_med <- rep(0, N)
-  
-  n <- 100
-  
-  for (i in 1:N) {
-    if (rho > 0) {
-      eps <- sqrt(rho) * rnorm(1) + sqrt(1 - rho) * rnorm(n)
-    } else {
-      eps <- rnorm(n)
-    }
-    
-    x <- eps + c(rep(0, floor(pi0 * n)), rep(mu[j], n - floor(n * pi0)))
-    sig <- c(rep(0, floor(pi0 * n)), rep(1, n - floor(pi0 * n)))
-    sig <- sig[order(1 - pnorm(x))]
-    p_seq <- sort(1 - pnorm(x))
-    
-    pi0est_dos1[i] <- 1 - storey_pi1est(p_seq[dos_fun(p_seq, alpha = 1)$cp_loc], p_seq)$est
-    pi0est_dos12[i] <- 1 - storey_pi1est(p_seq[dos_fun(p_seq, alpha = 1/2)$cp_loc], p_seq)$est
-    pi0est_alpha[i] <- 1 - storey_pi1est(alpha, p_seq, mod = TRUE)$est
-    pi0est_12[i] <- 1 - storey_pi1est(1/2, p_seq, mod = TRUE)$est
-    pi0est_med[i] <- 1 - storey_pi1est(p_seq[n/2], p_seq, mod = TRUE)$est
-    
-    abh_dos1 <- bh_adaptive(p_seq, pi0est_dos1[i], alpha, sig)
-    fdr_dos1[i] <- abh_dos1$fdr
-    power_dos1[i] <- abh_dos1$power
-    
-    abh_dos12 <- bh_adaptive(p_seq, pi0est_dos12[i], alpha, sig)
-    fdr_dos12[i] <- abh_dos12$fdr
-    power_dos12[i] <- abh_dos12$power
-    
-    abh_alpha <- bh_adaptive(p_seq, pi0est_alpha[i], alpha, sig)
-    fdr_alpha[i] <- abh_alpha$fdr
-    power_alpha[i] <- abh_alpha$power
-    
-    abh_oracle <- bh_adaptive(p_seq, pi0, alpha, sig)
-    fdr_oracle[i] <- abh_oracle$fdr
-    power_oracle[i] <- abh_oracle$power
-    
-    abh_12 <- bh_adaptive(p_seq, pi0est_12[i], alpha, sig)
-    fdr_12[i] <- abh_12$fdr
-    power_12[i] <- abh_12$power
-    
-    abh_med <- bh_adaptive(p_seq, pi0est_med[i], alpha, sig)
-    fdr_med[i] <- abh_med$fdr
-    power_med[i] <- abh_med$power
-  }
-  
-  arr["pi0est", "DOS-1", toString(mu[j])] <- mean(pi0est_dos1)
-  arr["pi0est", "DOS-1/2", toString(mu[j])] <- mean(pi0est_dos12)
-  arr["pi0est", "ST-alpha", toString(mu[j])] <- mean(pi0est_alpha)
-  arr["pi0est", "oracle", toString(mu[j])] <- pi0
-  arr["pi0est", "ST-1/2", toString(mu[j])] <- mean(pi0est_12)
-  arr["pi0est", "ST-MED", toString(mu[j])] <- mean(pi0est_med)
-  
-  arr["FDR", "DOS-1", toString(mu[j])] <- mean(fdr_dos1)
-  arr["FDR", "DOS-1/2", toString(mu[j])] <- mean(fdr_dos12)
-  arr["FDR", "ST-alpha", toString(mu[j])] <- mean(fdr_alpha)
-  arr["FDR", "oracle", toString(mu[j])] <- mean(fdr_oracle)
-  arr["FDR", "ST-1/2", toString(mu[j])] <- mean(fdr_12)
-  arr["FDR", "ST-MED", toString(mu[j])] <- mean(fdr_med)
-  
-  arr["power", "DOS-1", toString(mu[j])] <- mean(div(power_dos1, power_oracle))
-  arr["power", "DOS-1/2", toString(mu[j])] <- mean(div(power_dos12, power_oracle))
-  arr["power", "ST-alpha", toString(mu[j])] <- mean(div(power_alpha, power_oracle))
-  arr["power", "oracle", toString(mu[j])] <- mean(div(power_oracle, power_oracle))
-  arr["power", "ST-1/2", toString(mu[j])] <- mean(div(power_12, power_oracle))
-  arr["power", "ST-MED", toString(mu[j])] <- mean(div(power_med, power_oracle))
-}
-
-mat_pi0 <- t(arr["pi0est", , ])
-matplot(mu, mat_pi0, type = "b", pch = 1:6, xlab = expression(mu), ylab = expression(hat(pi)[0]), main = "Average proportion estimates")
-legend("topright", colnames(mat_pi0), col = seq_len(ncol(mat_pi0)), cex = 0.8, pch= 1:6)
-
-mat_fdr <- t(arr["FDR", , ])
-matplot(mu, mat_fdr, type = "b", xlab = expression(mu), pch = 1:6, main = "FDR", ylab = "")
-legend("topleft", colnames(mat_fdr), col = seq_len(ncol(mat_fdr)), cex = 0.8, pch = 1:6)
-abline(h = alpha)
-
-mat_power <- t(arr["power", , ])
-matplot(mu, mat_power, type = "b", xlab = expression(mu), pch = 1:6, main = "Relative power", ylab = "")
-legend("topleft", colnames(mat_power), col = seq_len(ncol(mat_power)), cex = 0.8, pch = 1:6)
-```
-The following code produces 3 figures, showing the average proportion estimates, FDR and power of different adaptive BH methods as a function of the correlation coefficient $\rho$.
-
-```{r fdr control rho, eval = FALSE}
-rho <- (1:31 - 1) / 30
-pi0 <- 0.75
-mu <- 3
-n <- 100
-N <- 1000
-arr <- array(
-  data = rep(0, 3 * 6 * length(rho)),
-  dim = c(3, 6, length(rho)),
-  dimnames = list(
-    c("pi0est", "FDR", "power"),
-    c("DOS-1", "DOS-1/2", "oracle", "ST-alpha", "ST-MED", "ST-1/2"),
-    rho
-  )
-)
-
-for (j in 1:length(rho)) {
-  
-  pi0est_dos <- pi0est_alpha <- rep(0, N)
-  fdr_dos <- fdr_alpha <- fdr_oracle <- rep(0, N)
-  power_dos <- power_alpha <- power_oracle <- rep(0, N)
-  
-  for (i in 1:N) {
-    if (rho[j] > 0) {
-      eps <- sqrt(rho[j]) * rnorm(1) + sqrt(1 - rho[j]) * rnorm(n)
-    } else {
-      eps <- rnorm(n)
-    }
-    
-    x <- eps + c(rep(0, floor(pi0 * n)), rep(mu, n - floor(n * pi0)))
-    sig <- c(rep(0, floor(pi0 * n)), rep(1, n - floor(pi0 * n)))
-    sig <- sig[order(1 - pnorm(x))]
-    p_seq <- sort(1 - pnorm(x))
-    
-    pi0est_dos1[i] <- 1 - storey_pi1est(p_seq[dos_fun(p_seq, alpha = 1)$cp_loc], p_seq)$est
-    pi0est_dos12[i] <- 1 - storey_pi1est(p_seq[dos_fun(p_seq, alpha = 1/2)$cp_loc], p_seq)$est
-    pi0est_alpha[i] <- 1 - storey_pi1est(alpha, p_seq, mod = TRUE)$est
-    pi0est_12[i] <- 1 - storey_pi1est(1/2, p_seq, mod = TRUE)$est
-    pi0est_med[i] <- 1 - storey_pi1est(p_seq[n/2], p_seq, mod = TRUE)$est
-    
-    abh_dos <- bh_adaptive(p_seq, pi0est_dos[i], alpha, sig)
-    fdr_dos[i] <- abh_dos$fdr
-    power_dos[i] <- abh_dos$power
-
-    abh_alpha <- bh_adaptive(p_seq, pi0est_alpha[i], alpha, sig)
-    fdr_alpha[i] <- abh_alpha$fdr
-    power_alpha[i] <- abh_alpha$power
-    
-    abh_oracle <- bh_adaptive(p_seq, pi0, alpha, sig)
-    fdr_oracle[i] <- abh_oracle$fdr
-    power_oracle[i] <- abh_oracle$power
-    
-    abh_12 <- bh_adaptive(p_seq, pi0est_12[i], alpha, sig)
-    fdr_12[i] <- abh_12$fdr
-    power_12[i] <- abh_12$power
-    
-    abh_med <- bh_adaptive(p_seq, pi0est_med[i], alpha, sig)
-    fdr_med[i] <- abh_med$fdr
-    power_med[i] <- abh_med$power
-  }
-  
-  arr["pi0est", "DOS-1", toString(rho[j])] <- mean(pi0est_dos1)
-  arr["pi0est", "DOS-1/2", toString(rho[j])] <- mean(pi0est_dos12)
-  arr["pi0est", "ST-alpha", toString(rho[j])] <- mean(pi0est_alpha)
-  arr["pi0est", "oracle", toString(rho[j])] <- pi0
-  arr["pi0est", "ST-1/2", toString(rho[j])] <- mean(pi0est_12)
-  arr["pi0est", "ST-MED", toString(rho[j])] <- mean(pi0est_med)
-  
-  arr["FDR", "DOS-1", toString(rho[j])] <- mean(fdr_dos1)
-  arr["FDR", "DOS-1/2", toString(rho[j])] <- mean(fdr_dos12)
-  arr["FDR", "ST-alpha", toString(rho[j])] <- mean(fdr_alpha)
-  arr["FDR", "oracle", toString(rho[j])] <- mean(fdr_oracle)
-  arr["FDR", "ST-1/2", toString(rho[j])] <- mean(fdr_12)
-  arr["FDR", "ST-MED", toString(rho[j])] <- mean(fdr_med)
-  
-  arr["power", "DOS-1", toString(rho[j])] <- mean(div(power_dos1, power_oracle))
-  arr["power", "DOS-1/2", toString(rho[j])] <- mean(div(power_dos12, power_oracle))
-  arr["power", "ST-alpha", toString(rho[j])] <- mean(div(power_oracle, power_alpha))
-  arr["power", "oracle", toString(rho[j])] <- mean(div(power_oracle, power_oracle))
-  arr["power", "ST-1/2", toString(rho[j])] <- mean(div(power_oracle, power_12))
-  arr["power", "ST-MED", toString(rho[j])] <- mean(div(power_oracle, power_med))
-}
-
-mat_pi0 <- t(arr["pi0est", , ])
-matplot(rho, mat_pi0, type = "b", xlab = expression(rho), pch = 1:6, ylab = expression(hat(pi)[0]), main = "Average proportion estimates")
-legend("topright", colnames(mat_pi0), col = seq_len(ncol(mat_pi0)), cex = 0.8, pch = 1:6)
-
-mat_fdr <- t(arr["FDR", , ])
-matplot(rho, mat_fdr, type = "b", xlab = expression(rho), pch = 1:6, main = "FDR", ylab = "")
-legend("topleft", colnames(mat_fdr), col = seq_len(ncol(mat_fdr)), cex = 0.8, pch = 1:6)
-abline(h = alpha)
-
-mat_power <- t(arr["power", , ])
-matplot(rho, mat_power, type = "b", xlab = expression(rho), pch = 1:6, main = "Relative power", ylab = "")
-legend("topleft", colnames(mat_power), col = seq_len(ncol(mat_power)), cex = 0.8, pch = 1:6)
-```

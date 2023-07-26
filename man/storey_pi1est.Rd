@@ -2,7 +2,7 @@
 % Please edit documentation in R/dos_functions.R
 \name{storey_pi1est}
 \alias{storey_pi1est}
-\title{Storey's estimator function}
+\title{Storey's estimator calculation}
 \usage{
 storey_pi1est(lambda, p_seq, mod = FALSE)
 }
@@ -11,18 +11,28 @@ storey_pi1est(lambda, p_seq, mod = FALSE)
 
 \item{p_seq}{A sequence of p-values}
 
-\item{mod}{Whether a modified Storey's estimator is to be calculated (see Blanchard, G.,
-& Roquain, É. (2009). Adaptive false discovery rate control under independence and dependence.
- Journal of Machine Learning Research, 10, 2837–2871.)}
+\item{mod}{Whether a modified Storey's estimator is to be used. See Blanchard, G.,
+& Roquain, É. (2009).}
 }
 \value{
 A list containing
-* `lambda` Input vector lambda
-
-* `est` The corresponding vector of estimates
+\item{lambda}{Input vector lambda}
+\item{est}{The corresponding vector of estimates}
 }
 \description{
 This function calculates the Storey's estimator
 of the false null proportion, given the tuning parameter values
-and the sequence of p-values
+and the sequence of p-values.
+}
+\examples{
+p_seq <- sim_pval(100, 0, 3, 0.1, 0)
+storey_pi1est(0.5, p_seq)
+
+dos_cp <- dos_fun(p_seq)$cp_loc
+storey_pi1est(dos_cp, p_seq)
+}
+\references{
+Blanchard, G.,
+ & Roquain, É. (2009). Adaptive false discovery rate control under independence and dependence.
+  Journal of Machine Learning Research, 10, 2837–2871. http://jmlr.org/papers/v10/blanchard09a.html
 }

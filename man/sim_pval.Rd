@@ -29,3 +29,7 @@ where the p-values are calculated assuming that the statistics
 have standard normal distribution under the null
 and a mean greater than zero under the alternative.
 }
+\examples{
+p_seq <- sim_pval(100, 0, 3, 0.1, 0)
+plot(p_seq)
+}
