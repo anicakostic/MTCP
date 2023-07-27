@@ -75,7 +75,7 @@ hd_est <- function(p_seq,lambda=0.5,c=NULL)
 bh_adaptive <- function(p_seq, pi0, alpha, sig) {
 
   ord_pseq <- order(p_seq)
-  sig <- sig[order_pseq]
+  sig <- sig[ord_pseq]
   p_seq <- sort(p_seq)
   n <- length(p_seq)
   res <- NULL
