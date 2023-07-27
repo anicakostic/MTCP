@@ -73,6 +73,10 @@ hd_est <- function(p_seq,lambda=0.5,c=NULL)
 #'
 #' @export
 bh_adaptive <- function(p_seq, pi0, alpha, sig) {
+
+  ord_pseq <- order(p_seq)
+  sig <- sig[order_pseq]
+  p_seq <- sort(p_seq)
   n <- length(p_seq)
   res <- NULL
   bh_est <- ifelse(sum(p_seq < (1:n) / n * alpha / pi0) == 0, 0,
