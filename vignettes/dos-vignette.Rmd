@@ -145,7 +145,7 @@ The code in this section compares the DOS method to different methods for estima
 * **LSL** - Benjamini, Y., & Hochberg, Y. (2000). On the Adaptive Control of the False Discovery Rate in Multiple Testing with Independent Statistics. Journal of Educational and Behavioral Statistics, 25(1), 60. https://doi.org/10.2307/1165312
 * **MGF** & **PRE** - Broberg, P. (2005). A comparative review of estimates of the proportion unchanged genes and the false discovery rate. BMC Bioinformatics, 6, 199. https://doi.org/10.1186/1471-2105-6-199 
 * **MR** - Meinshausen, N., & Rice, J. (2006). Estimating the proportion of false null hypotheses among a large number of independently tested hypotheses. Annals of Statistics, 34(1), 373–393. https://doi.org/10.1214/009053605000000741 
-* **SMOOTHER** - Storey, J. D., & Tibshirani, R. (2003). Statistical significance for genomewide studies. Proceedings of the National Academy of Sciences, 100(16), 9440–9445. https://doi.org/10.1073/pnas.1530509100 
+* **STS** - Storey, J. D., & Tibshirani, R. (2003). Statistical significance for genomewide studies. Proceedings of the National Academy of Sciences, 100(16), 9440–9445. https://doi.org/10.1073/pnas.1530509100 
 
 The following R packages are required to compute some of the methods mentioned above:
 
@@ -172,7 +172,7 @@ dos_test_gaussian <- function(n, eps, mu, N) {
   mat <- matrix(0, N, 14)
   colnames(mat) <- c("DOS1", "DOS05", "BH09", "BOOTSTRAP", "FIX05", "FIXMED",
                      "JD", "LLF_CONVEST", "LLF_GRENANDER", "LSL", "MGF", "MR",
-                     "PRE", "SMOOTHER")
+                     "PRE", "STS")
   df <- data.frame(mat)
 
   for (i in 1:N) {
@@ -187,7 +187,7 @@ dos_test_gaussian <- function(n, eps, mu, N) {
     df$FIX05[i] <- storey_pi1est(0.5, p_seq)$est
     df$FIXMED[i] <- storey_pi1est(p_seq[n/2], p_seq)$est
     df$BOOTSTRAP[i] <- 1 - qvalue::pi0est(p_seq, pi0.method = "bootstrap")$pi0
-    df$SMOOTHER[i] <- 1 - qvalue::pi0est(p_seq, pi0.method = "smoother")$pi0
+    df$STS[i] <- 1 - qvalue::pi0est(p_seq, pi0.method = "smoother")$pi0
     df$LSL[i] <- 1 - fdrtool::pval.estimate.eta0(p_seq, method = "adaptive",
                                                  diagnostic.plot = FALSE)
     df$PRE[i] <- 1 - PRE_est(p_seq)
@@ -384,8 +384,8 @@ We include the adaptive procedures using Storey-based estimators and the DOS est
 The following code produces 3 figures, showing the average estimated proportion value, FDR and power of different adaptive BH methods as a function of the true null proportion. 
 
 ```{r fdr control pi0, eval = FALSE}
-n <- 100
-N <- 10000
+n <- 500
+N <- 1000
 mu <- 3
 pi0 <- 0.5 + 0.5 * (1:15-1) / 15
 rho <- 0.2
@@ -491,6 +491,7 @@ mat_fdr <- t(arr["FDR", , ])
 matplot(pi0, mat_fdr, type = "b", pch = 1:7, col = seq_len(ncol(mat_pi0)), main = "FDR", ylab = "",  xlab= expression(pi[0]))
 legend("topleft", colnames(mat_fdr), col = seq_len(ncol(mat_fdr)), cex = 0.8, pch = 1:7)
 abline(h = alpha)
+abline(h=0.06)
 
 mat_power <- t(arr["power", , ])
 matplot(pi0, mat_power, type = "b", pch = 1:7, col = seq_len(ncol(mat_power)), main = "Relative power", ylab = "", xlab= expression(pi[0]))
@@ -729,7 +730,7 @@ legend("topleft", colnames(mat_power), col = seq_len(ncol(mat_power)), cex = 0.8
 
 #### DOS - FDR control large sample
 
-To include the $q$-value method, (that uses *SMOOTHER* proportion estimator) which is the most popular method used for adaptive FDR control in applied literature, sample size needs to be larger (>500) and the method in general does not work for correlated $p$-values (in both cases the number of $p$-values close to 1 is not large enough for the proportion estimator to be computed)
+To include the $q$-value method, (that uses *STS* proportion estimator) which is the most popular method used for adaptive FDR control in applied literature, sample size needs to be larger (>500) and the method in general does not work for correlated $p$-values (in both cases the number of $p$-values close to 1 is not large enough for the proportion estimator to be computed)
 
 The following code produces 3 figures, showing the average estimated proportion value, FDR and power of different adaptive BH methods as a function of the true null proportion. 
 
@@ -759,7 +760,7 @@ alpha <- 0.05
 arr <- array(data = rep(0, 3 * 8 * length(pi0)),
              dim = c(3, 8, length(pi0)),
              dimnames = list(c("pi0est", "FDR", "power"),
-                             c("smoother", "bh", "DOS-1", "DOS-1/2", "oracle", "ST-alpha", "ST-MED", "ST-1/2"),
+                             c("STS", "LSL", "DOS-1", "DOS-1/2", "oracle", "ST-alpha", "ST-MED", "ST-1/2"),
                              pi0))
 
 div <- function(x, y) {
@@ -831,8 +832,8 @@ for (j in 1:length(pi0)) {
     power_med[i] <- abh_med$power
   }
   
-  arr["pi0est", "bh", toString(pi0[j])] <- mean(pi0est_bh)
-  arr["pi0est", "smoother", toString(pi0[j])] <- mean(pi0est_smoother)
+  arr["pi0est", "LSL", toString(pi0[j])] <- mean(pi0est_bh)
+  arr["pi0est", "STS", toString(pi0[j])] <- mean(pi0est_smoother)
   arr["pi0est", "DOS-1", toString(pi0[j])] <- mean(pi0est_dos1)
   arr["pi0est", "DOS-1/2", toString(pi0[j])] <- mean(pi0est_dos12)
   arr["pi0est", "ST-alpha", toString(pi0[j])] <- mean(pi0est_alpha)
@@ -840,8 +841,8 @@ for (j in 1:length(pi0)) {
   arr["pi0est", "ST-1/2", toString(pi0[j])] <- mean(pi0est_12)
   arr["pi0est", "ST-MED", toString(pi0[j])] <- mean(pi0est_med)
   
-  arr["FDR", "bh", toString(pi0[j])] <- mean(fdr_bh)
-  arr["FDR", "smoother", toString(pi0[j])] <- mean(fdr_smoother)
+  arr["FDR", "LSL", toString(pi0[j])] <- mean(fdr_bh)
+  arr["FDR", "STS", toString(pi0[j])] <- mean(fdr_smoother)
   arr["FDR", "DOS-1", toString(pi0[j])] <- mean(fdr_dos1)
   arr["FDR", "DOS-1/2", toString(pi0[j])] <- mean(fdr_dos12)
   arr["FDR", "ST-alpha", toString(pi0[j])] <- mean(fdr_alpha)
@@ -849,8 +850,8 @@ for (j in 1:length(pi0)) {
   arr["FDR", "ST-1/2", toString(pi0[j])] <- mean(fdr_12)
   arr["FDR", "ST-MED", toString(pi0[j])] <- mean(fdr_med)
   
-  arr["power", "bh", toString(pi0[j])] <- mean(div(power_bh, power_oracle))
-  arr["power", "smoother", toString(pi0[j])] <- mean(div(power_smoother, power_oracle))
+  arr["power", "LSL", toString(pi0[j])] <- mean(div(power_bh, power_oracle))
+  arr["power", "STS", toString(pi0[j])] <- mean(div(power_smoother, power_oracle))
   arr["power", "DOS-1", toString(pi0[j])] <- mean(div(power_dos1, power_oracle))
   arr["power", "DOS-1/2", toString(pi0[j])] <- mean(div(power_dos12, power_oracle))
   arr["power", "ST-alpha", toString(pi0[j])] <- mean(div(power_alpha, power_oracle))
@@ -875,3 +876,142 @@ legend("topleft", colnames(mat_power), col = seq_len(ncol(mat_power)), cex = 0.8
 abline(h=1)
 ```
 
+
+
+## Real data example
+
+
+Necessary packages 
+
+```{r example packages, echo = TRUE, results = 'hide'}
+packages <- c("devtools", "dplyr", "neuroblastoma")
+#install.packages(packages)
+#devtools::install_github("jewellsean/ChangepointInference")
+lapply(c(packages, "ChangepointInference"), library, character.only = TRUE)
+```
+
+Loading the data 
+
+```{r loading data}
+data(neuroblastoma)
+nb_data <- neuroblastoma$profiles
+nb_an <- neuroblastoma$annotations
+
+chr_no <- c(1, 2, 3, 4, 11, 17)
+
+chr_an <- vector("list", length(chr_no))
+s <- vector("list", length(chr_no))
+e <- vector("list", length(chr_no))
+chr_data <- vector("list", length(chr_no))
+profiles_chr <- vector("list", length(chr_no))
+
+for (i in 1:length(chr_no)) {
+  temp_an <- filter(nb_an, chromosome == chr_no[i]) %>%
+    arrange(profile.id)
+
+  s[[i]] <- temp_an$min[1]
+  e[[i]] <- temp_an$max[1]
+
+  temp_an <- select(temp_an, -(chromosome:max))
+  chr_an[[i]] <- temp_an
+
+  temp_data <- filter(nb_data, chromosome == chr_no[i]) %>%
+    arrange(profile.id) %>%
+    select(-chromosome)
+
+  chr_data[[i]] <- temp_data
+
+  profiles_chr[[i]] <- unique(temp_an$profile.id)
+}
+```
+
+Plot a specific profile:
+
+```{r plot profile}
+chr_no <- c(1, 2, 3, 4, 11, 17)
+i <- 1
+j <- 7
+chr_an[[i]][j,] # annotation for the given profile
+
+dat <- chr_data[[i]] %>%
+  filter(profile.id == profiles_chr[[i]][j]) %>%
+  filter(position >= s[[i]] & position <= e[[i]])
+
+dat %>%
+  with(plot(logratio))
+```
+
+Get the annotations in a list
+
+```{r annot list}
+an_list <- vector("list", length(chr_no))
+
+for (i in 1:length(chr_no)) {
+  an_list[[i]] <- chr_an[[i]] %>%
+    select(annotation) %>%
+    mutate(annotation = recode(annotation, 'breakpoint' = 1, 'normal' = 0)) %>%
+    unlist() %>%
+    as.numeric()
+}
+```
+
+Get the $p$-value
+
+```{r get pvals}
+K <- 1
+h <- 5
+q <- 0.025
+
+p_seq <- vector("list", length(chr_no))
+
+pb <- txtProgressBar(max = length(chr_no))
+
+for (i in 1:length(chr_no)) {
+  
+  for (j in 1:length(profiles_chr[[i]])) {
+    dat <- chr_data[[i]] %>%
+      filter(profile.id == profiles_chr[[i]][j]) %>%
+      filter(position >= s[[i]] & position <= e[[i]])
+    
+    dat_seq <- dat$logratio
+    dat_seq <- dat_seq[dat_seq > quantile(dat_seq, q) &
+                       dat_seq < quantile(dat_seq, 1 - q)]
+    
+    fit_inference <- changepoint_inference(dat_seq, 'BS-fixed', K, window_size = h)
+    p_seq[[i]][j] <- fit_inference$pvals
+  }
+  
+  setTxtProgressBar(pb, i)
+}
+
+close(pb)
+```
+
+Plot the $p$-values
+
+```{r pval plot}
+for (i in 1:length(chr_no)) {
+  ord_pseq <- order(p_seq[[i]])
+  col <- an_list[[i]] + 1
+  plot(p_seq[[i]][ord_pseq], col = col[ord_pseq], ylab = "", main = paste("CHR", chr_no[i]), type = "h")
+}
+```
+
+Calculate the number of profiles with changes:
+
+```{r estimate cnv prop}
+estimates <- vector("list", length(chr_no))
+
+for (i in 1:length(chr_no)) {
+  p_temp <- sort(p_seq[[i]])
+  cp_loc <- dos_fun(p_temp)$cp_loc
+
+  dos_est <- round(storey_pi1est(p_temp[cp_loc], p_temp)$est * length(p_temp))
+  st05_est <- storey_pi1est(0.5, p_temp)$est * length(p_temp)
+  an_est <- sum(an_list[[i]])
+
+  estimates[[i]] <- data.frame("DOS" = dos_est, "ST05" = st05_est, "ANNOT" = an_est)
+}
+
+estimates
+```
