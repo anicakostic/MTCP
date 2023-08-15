@@ -1,6 +1,15 @@
 ---
 title: "dos-vignette"
 output: rmarkdown::html_vignette
+header-includes:
+- |
+  ```{=latex}
+   \usepackage{amsmath}
+   \usepackage{calc}
+   \usepackage{accents}
+   \newcommand{\dbtilde}[1]{\accentset{\approx}{#1}}
+   ```
+
 vignette: >
   %\VignetteIndexEntry{dos-vignette}
   %\VignetteEngine{knitr::rmarkdown}
@@ -384,7 +393,7 @@ We include the adaptive procedures using Storey-based estimators and the DOS est
 The following code produces 3 figures, showing the average estimated proportion value, FDR and power of different adaptive BH methods as a function of the true null proportion. 
 
 ```{r fdr control pi0, eval = FALSE}
-n <- 500
+n <- 100
 N <- 1000
 mu <- 3
 pi0 <- 0.5 + 0.5 * (1:15-1) / 15
@@ -484,18 +493,19 @@ for (j in 1:length(pi0)) {
 }
 
 mat_pi0 <- t(arr["pi0est", , ])
-matplot(pi0, mat_pi0, type = "b", pch = 1:7, col = seq_len(ncol(mat_pi0)), ylab = expression(hat(pi)[0]), xlab= expression(pi[0]), main = "Average proportion estimates")
-legend("bottomright", colnames(mat_pi0), col = seq_len(ncol(mat_pi0)), cex = 0.8, pch=1:7)
+matplot(pi0, mat_pi0, type = "b", lwd = 1.5, pch = 1:7, col = seq_len(ncol(mat_pi0)), ylab = expression(hat(pi)[0]), xlab= expression(pi[0]), main = "Average proportion estimates")
+legend("bottomright", lwd = 1.5,colnames(mat_pi0),  col = seq_len(ncol(mat_pi0)), cex = 0.8, pch=1:7)
 
 mat_fdr <- t(arr["FDR", , ])
-matplot(pi0, mat_fdr, type = "b", pch = 1:7, col = seq_len(ncol(mat_pi0)), main = "FDR", ylab = "",  xlab= expression(pi[0]))
-legend("topleft", colnames(mat_fdr), col = seq_len(ncol(mat_fdr)), cex = 0.8, pch = 1:7)
+matplot(pi0, mat_fdr, type = "b", lwd = 1.5, pch = 1:7, col = seq_len(ncol(mat_pi0)), main = "FDR", ylab = "",  xlab= expression(pi[0]))
+legend("topright", lwd= 1.5, colnames(mat_fdr), col = seq_len(ncol(mat_fdr)), cex = 0.8, pch = 1:7)
 abline(h = alpha)
-abline(h=0.06)
+
 
 mat_power <- t(arr["power", , ])
-matplot(pi0, mat_power, type = "b", pch = 1:7, col = seq_len(ncol(mat_power)), main = "Relative power", ylab = "", xlab= expression(pi[0]))
-legend("topleft", colnames(mat_power), col = seq_len(ncol(mat_power)), cex = 0.8, pch = 1:7)
+matplot(pi0, mat_power, type = "b", lwd = 1.5, pch = 1:7, col = seq_len(ncol(mat_power)), main = "Relative power", ylab = "", xlab= expression(pi[0]))
+legend("topleft", lwd = 1.5,colnames(mat_power), col = seq_len(ncol(mat_power)), cex = 0.8, pch = 1:7)
+
 ```
 
 The following code produces 3 figures, showing the average proportion estimates, FDR and power of different adaptive BH methods as a function of the mean under the alternative.
@@ -755,7 +765,7 @@ n <- 500
 N <- 1000
 mu <- 3
 pi0 <- 0.5 + 0.5 * (1:15-1) / 15
-rho=0
+rho <- 0
 alpha <- 0.05
 arr <- array(data = rep(0, 3 * 8 * length(pi0)),
              dim = c(3, 8, length(pi0)),
@@ -892,7 +902,7 @@ lapply(c(packages, "ChangepointInference"), library, character.only = TRUE)
 
 Loading the data 
 
-```{r loading data}
+```{r loading data, eval = FALSE}
 data(neuroblastoma)
 nb_data <- neuroblastoma$profiles
 nb_an <- neuroblastoma$annotations
@@ -927,7 +937,7 @@ for (i in 1:length(chr_no)) {
 
 Plot a specific profile:
 
-```{r plot profile}
+```{r plot profile, eval = FALSE}
 chr_no <- c(1, 2, 3, 4, 11, 17)
 i <- 1
 j <- 7
@@ -943,7 +953,7 @@ dat %>%
 
 Get the annotations in a list
 
-```{r annot list}
+```{r annot list, eval = FALSE}
 an_list <- vector("list", length(chr_no))
 
 for (i in 1:length(chr_no)) {
@@ -957,7 +967,7 @@ for (i in 1:length(chr_no)) {
 
 Get the $p$-value
 
-```{r get pvals}
+```{r get pvals, eval = FALSE}
 K <- 1
 h <- 5
 q <- 0.025
@@ -989,17 +999,18 @@ close(pb)
 
 Plot the $p$-values
 
-```{r pval plot}
+```{r pval plot, eval = FALSE}
 for (i in 1:length(chr_no)) {
   ord_pseq <- order(p_seq[[i]])
-  col <- an_list[[i]] + 1
-  plot(p_seq[[i]][ord_pseq], col = col[ord_pseq], ylab = "", main = paste("CHR", chr_no[i]), type = "h")
+  col <- an_list[[i]] 
+  col <- car::recode(col, "0='lightgrey'; 1 = 'red3'")
+  plot(p_seq[[i]][ord_pseq], col =  col[ord_pseq], lwd = 2, ylab = "", main = paste("Chromosome", chr_no[i]), type = "h")
 }
 ```
 
 Calculate the number of profiles with changes:
 
-```{r estimate cnv prop}
+```{r estimate cnv prop, eval = FALSE}
 estimates <- vector("list", length(chr_no))
 
 for (i in 1:length(chr_no)) {
@@ -1014,4 +1025,92 @@ for (i in 1:length(chr_no)) {
 }
 
 estimates
+```
+
+
+
+
+
+## Numerical results for the ideal DOS function
+
+We load the data frame containing numerical results obtained in Mathematica. This dataframe contains the locations of the "true change-point", i.e. the maximum of the function $h_F^\alpha(t)$, for $\alpha = 1$, under the Gaussian model for various values of $\mu$ (columns) and $\varepsilon$ (rows).
+
+```{r loading mathematica}
+head(CP_loc_alpha05)
+
+head(estimable_prop_sqrt)
+
+head(CP_loc_alpha1)
+
+head(estimable_prop_slope)
+```
+
+
+The next chunk plots the closeness of the estimable proportion under the Gaussian model, for various values of the parameters $\varepsilon$ and $\mu$. The estimable false null proportion is the value towards which our proportion estimator converges asymptotically. It is defined as 
+$$\tilde{\pi}_1^\alpha = \frac{\tilde{t}_\alpha - F^{-1}(\tilde{t}_\alpha) }{1 -  F^{-1}(\tilde{t}_\alpha)} \le \pi_1$$, where $\tilde{t}_\alpha$ is the point of maximum of the function $h_F^\alpha$. The following plots explore how close that value is to the true proportion, by plotting $\frac{\tilde{\pi}_1^\alpha}{\pi_1}$ which is the percentage of the false null proportion possible to estimate. We consider this quantity for $\alpha = 1/2$ and $\alpha = 1$.
+
+```{r estimable proportion alpha1}
+
+estimable_prop_slope_sub <-  select(estimable_prop_slope, "2","3","4","5") 
+
+true_props <- as.numeric(rownames(estimable_prop_slope_sub))
+
+plot(as.numeric(rownames(estimable_prop_slope_sub)),
+     estimable_prop_slope_sub[,1]/true_props,
+     col = 2, pch= 18, xlab = "", ylab = "", ylim = c(0,1))
+for(i in 2:ncol(estimable_prop_slope_sub))
+{
+  points(as.numeric(rownames(estimable_prop_slope_sub)),
+     estimable_prop_slope_sub[,i]/true_props,
+     col=i+1, pch=18, xlab="", ylab="")
+}
+title(ylab=expression(tilde(pi)[1]/pi[1]), line=2.5, cex.lab=1.2)
+title(xlab=expression(pi[1]), line=2.5, cex.lab=1.2)
+title(main = expression(paste("% of the proportion estimable, ", alpha == 1)))
+legend("bottomright",
+       legend = c(expression(mu==2), expression(mu==3),expression(mu==4), expression(mu==5)),
+       col = 2:5,
+       #lty=c(1,4),
+       pch = 18,
+       bty = "n",
+       pt.cex = 1,
+       cex = 1,
+       text.col = "black",
+       horiz = F ,
+       inset = c(0.01, 0.01))
+
+```
+
+
+```{r estimable proportion alpha05}
+
+
+estimable_prop_sqrt_sub <-  select(estimable_prop_sqrt, "2","3","4","5") 
+
+true_props <- as.numeric(rownames(estimable_prop_sqrt_sub))
+
+plot(as.numeric(rownames(estimable_prop_sqrt_sub)),
+     estimable_prop_sqrt_sub[,1]/true_props,
+     col = 2, pch= 18, xlab = "", ylab = "", ylim = c(0,1))
+for(i in 2:ncol(estimable_prop_sqrt_sub))
+{
+  points(as.numeric(rownames(estimable_prop_sqrt_sub)),
+     estimable_prop_sqrt_sub[,i]/true_props,
+     col=i+1, pch=18, xlab="", ylab="")
+}
+title(ylab=expression(tilde(pi)[1]/pi[1]), line=2.5, cex.lab=1.2)
+title(xlab=expression(pi[1]), line=2.5, cex.lab=1.2)
+title(main = expression(paste("% of the proportion estimable, ", alpha == 1/2)))
+legend("bottomright",
+       legend = c(expression(mu==2), expression(mu==3),expression(mu==4), expression(mu==5)),
+       col = 2:5,
+       #lty=c(1,4),
+       pch = 18,
+       bty = "n",
+       pt.cex = 1,
+       cex = 1,
+       text.col = "black",
+       horiz = F ,
+       inset = c(0.01, 0.01))
+
 ```

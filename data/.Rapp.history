@@ -1,0 +1,2 @@
+load("/Users/anicakostic/R packages/MTCP/data/EstimableProportionSlope.RData")
+estimable_prop_slope
