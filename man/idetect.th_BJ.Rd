@@ -21,7 +21,7 @@ idetect.th_BJ(
 
 \item{points}{The number of points added to the interval at each step (the minimum number of points)}
 
-\item{mode}{'left' or 'right' to indicate the type of expanding intervals to consider:
+\item{mode}{Set to 'left' or 'right' to indicate the type of expanding intervals to consider:
 'left' for left-expanding intervals and 'right' for right-expanding intervals}
 
 \item{mbj}{Boolean, if `TRUE`, the modified Berk-Jones statistic is used,
@@ -41,13 +41,15 @@ and the value of the Berk-Jones statistic at the fourth column}
 }
 \description{
 Given a sequence of sorted p-values, perform segmentation into uniform segments using
-the IDetect method with Berk-Jones statistic.
+the IDetect method with Berk-Jones statistic. The code provided is a slight
+ modification of the code for the `IDetect` procedure from the `breakfast` package
 }
 \references{
 Li, J., & Siegmund, D. (2015). Higher criticism:
  $p$-values and criticism. The Annals of Statistics, 43(3), 1323–1350.
-  https://doi.org/10.1214/15-aos1312
-}
-\seealso{
-[BJ_threshold_calc()]
+  https://doi.org/10.1214/15-aos1312,
+
+Anastasiou, A., & Fryzlewicz, P. (2022).
+Detecting multiple generalized change-points by isolating single ones.
+Metrika, 85(2), 141–174. https://doi.org/10.1007/s00184-021-00821-6
 }

@@ -26,3 +26,8 @@ Calculate the threshold to be used by `idetect.th_BJ_re` or `idetect.th_BJ_le`.
 The threshold is calculated as an upper quantile of the sequence of test statistics,
  such that the procedure under the null (for uniform p-values) does not detect any change-points.
 }
+\references{
+Anastasiou, A., & Fryzlewicz, P. (2022).
+Detecting multiple generalized change-points by isolating single ones.
+Metrika, 85(2), 141–174. https://doi.org/10.1007/s00184-021-00821-6
+}

@@ -23,7 +23,7 @@ ID_BJ_group(
 
 \item{points}{The length of the smallest interval considered (step parameter)}
 
-\item{mode}{Set to 'left exp' for the procedure with left expanding intervals, or 'right exp'
+\item{mode}{Set to 'left' for the procedure with left expanding intervals, or 'right'
 for the procedure with right expanding intervals}
 
 \item{mbj}{Boolean, if `TRUE`, the modified Berk-Jones statistic is used,
@@ -44,4 +44,9 @@ based on their significance}
 \description{
 Calculate the estimate of the local FDR using the IDetect Berk-Jones procedure
 with right or left expanding intervals
+}
+\references{
+Anastasiou, A., & Fryzlewicz, P. (2022).
+Detecting multiple generalized change-points by isolating single ones.
+Metrika, 85(2), 141–174. https://doi.org/10.1007/s00184-021-00821-6
 }

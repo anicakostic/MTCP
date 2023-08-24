@@ -1,9 +1,8 @@
 #' Berk-Jones statistic on subsets
 #'
-#' Given a sequence of sorted p-values and the start and endpoint indices s and e,
-#' check if the values p_{(s)},..., p_{(e)} form a sample from uniform U[p_{(s-1)}, p_{(e+1)}]
-#' distribution. If no s and e are provided, the statistic is calculated using the full sequence of
-#' p-values.
+#' Given a sequence of sorted p-values and the start and endpoint indices \eqn{s} and \eqn{e},
+#' check if the values \eqn{p_{(s)},..., p_{(e)}} form a sample from uniform \eqn{U[p_{(s-1)}, p_{(e+1)}]}
+#' distribution.
 #'
 #' @param ind A vector containing the starting and the ending point of the interval
 #' @param p_seq The sorted sequence of p-values
@@ -18,7 +17,7 @@
 #' \item{val}{the value of the Berk-Jones statistic}
 #' \item{loc}{the location in the corresponding sequence where the maximum is achieved}
 #'
-max.BJ <- function(ind = c(1, length(p_seq)), p_seq, mbj = FALSE) {
+max_BJ <- function(ind = c(1, length(p_seq)), p_seq, mbj = FALSE) {
   s = ind[1]
   e = ind[2]
 
@@ -57,12 +56,13 @@ max.BJ <- function(ind = c(1, length(p_seq)), p_seq, mbj = FALSE) {
 #' IDetect method with the Berk-Jones statistic
 #'
 #' Given a sequence of sorted p-values, perform segmentation into uniform segments using
-#' the IDetect method with Berk-Jones statistic.
+#' the IDetect method with Berk-Jones statistic. The code provided is a slight
+#'  modification of the code for the `IDetect` procedure from the `breakfast` package
 #'
 #' @param p_seq The sorted sequence of p-values
 #' @param thr The threshold for the Berk-Jones statistic. If `NULL` the threshold is calculated through simulations
 #' @param points The number of points added to the interval at each step (the minimum number of points)
-#' @param mode 'left' or 'right' to indicate the type of expanding intervals to consider:
+#' @param mode Set to 'left' or 'right' to indicate the type of expanding intervals to consider:
 #' 'left' for left-expanding intervals and 'right' for right-expanding intervals
 #' @param mbj Boolean, if `TRUE`, the modified Berk-Jones statistic is used,
 #' otherwise the standard form
@@ -71,9 +71,12 @@ max.BJ <- function(ind = c(1, length(p_seq)), p_seq, mbj = FALSE) {
 #'
 #' @references Li, J., & Siegmund, D. (2015). Higher criticism:
 #'  $p$-values and criticism. The Annals of Statistics, 43(3), 1323–1350.
-#'   https://doi.org/10.1214/15-aos1312
+#'   https://doi.org/10.1214/15-aos1312,
 #'
-#' @seealso [BJ_threshold_calc()]
+#' Anastasiou, A., & Fryzlewicz, P. (2022).
+#' Detecting multiple generalized change-points by isolating single ones.
+#' Metrika, 85(2), 141–174. https://doi.org/10.1007/s00184-021-00821-6
+#'
 #' @return Returns a list of 2 elements
 #' \item{changepoint}{The locations of the estimated change-points}
 #' \item{full_information}{A dataframe with the information about the Berk-Jones statistic on the subintervals
@@ -139,6 +142,7 @@ idetect.th_BJ <- function(p_seq, thr = NULL , points = 5, mode = "left", mbj = F
 #' model_r = idetect.th_BJ_re(sort(p_seq), thr = 11)
 #' model_r$changepoint
 #' model_r$full_information
+#' @keywords internal
 idetect.th_BJ_re <- function(p_seq, thr, points = 5, s = 1, e = length(p_seq),  k_r = 1, mbj = FALSE) {
 
   l <- length(p_seq)
@@ -156,7 +160,7 @@ idetect.th_BJ_re <- function(p_seq, thr, points = 5, s = 1, e = length(p_seq),  
       rur <- length(right_points)
       while ( (chp == 0) & (k_r < rur)) {
         ind <- c(s, right_points[k_r])
-        tmp <- max.BJ(ind, p_seq, mbj = mbj)
+        tmp <- max_BJ(ind, p_seq, mbj = mbj)
         pos_r[k_r] <- tmp[1]
         BJ_r[k_r] <- tmp[2]
         Res <- rbind(Res, c(s,right_points[k_r],pos_r[k_r],BJ_r[k_r]))
@@ -169,7 +173,7 @@ idetect.th_BJ_re <- function(p_seq, thr, points = 5, s = 1, e = length(p_seq),  
       if (chp == 0) {
         while ( (chp == 0) &  (k_r <= rur)) {
           ind <- c(s, right_points[k_r])
-          tmp <- max.BJ(ind, p_seq, mbj = mbj)
+          tmp <- max_BJ(ind, p_seq, mbj = mbj)
           pos_r[k_r] <- tmp[1]
           BJ_r[k_r] <- tmp[2]
           Res <- rbind(Res, c(s,right_points[k_r],pos_r[k_r],BJ_r[k_r]))
@@ -221,6 +225,7 @@ idetect.th_BJ_re <- function(p_seq, thr, points = 5, s = 1, e = length(p_seq),  
 #' model_l = idetect.th_BJ_le(sort(p_seq), thr = 11)
 #' model_l$changepoint
 #' model_l$full_information[ model_l$full_information[,4] > thr, ]
+#' @keywords internal
 idetect.th_BJ_le <- function(p_seq, thr, points = 5, s = 1, e = length(p_seq), k_l = 1, mbj = FALSE) {
   l <- length(p_seq)
   Res <- matrix(0, 1, 4)
@@ -239,7 +244,7 @@ idetect.th_BJ_le <- function(p_seq, thr, points = 5, s = 1, e = length(p_seq), k
 
     while ((chp == 0) & (k_l < lur)) {
       ind <- c(left_points[k_l], e)
-      tmp <- max.BJ(ind, p_seq, mbj = mbj)
+      tmp <- max_BJ(ind, p_seq, mbj = mbj)
       pos_l[k_l] <- tmp[1]
       BJ_l[k_l] <- tmp[2]
       Res <- rbind(Res, c(left_points[k_l], e, pos_l[k_l], BJ_l[k_l]))
@@ -254,7 +259,7 @@ idetect.th_BJ_le <- function(p_seq, thr, points = 5, s = 1, e = length(p_seq), k
     if (chp == 0) {
       while ((chp == 0) & (k_l <= lur)) {
         ind <- c(left_points[k_l], e)
-        tmp <- max.BJ(ind, p_seq, mbj = mbj)
+        tmp <- max_BJ(ind, p_seq, mbj = mbj)
         pos_l[k_l] <- tmp[1]
         BJ_l[k_l] <- tmp[2]
         Res <- rbind(Res, c(left_points[k_l], e, pos_l[k_l], BJ_l[k_l]))
@@ -297,6 +302,9 @@ idetect.th_BJ_le <- function(p_seq, thr, points = 5, s = 1, e = length(p_seq), k
 #' @param alpha The upper quantile to be used
 #' @param mbj Boolean, if `TRUE`, the modified Berk-Jones statistic is used,
 #' otherwise the standard form
+#' @references  Anastasiou, A., & Fryzlewicz, P. (2022).
+#' Detecting multiple generalized change-points by isolating single ones.
+#' Metrika, 85(2), 141–174. https://doi.org/10.1007/s00184-021-00821-6
 #'
 #' @return Returns the estimated threshold value
 #' @export
@@ -309,7 +317,7 @@ BJ_threshold_calc <- function(n, points, N, alpha, mbj = FALSE) {
     x <- sort(runif(n))
 
     for (j in 1:length(r_e_points)) {
-      values[j] <- max.BJ(ind = c(1, r_e_points[j]), x, mbj = mbj)[2]
+      values[j] <- max_BJ(ind = c(1, r_e_points[j]), x, mbj = mbj)[2]
     }
 
     max_seq[i] <- max(values)
@@ -328,7 +336,7 @@ BJ_threshold_calc <- function(n, points, N, alpha, mbj = FALSE) {
 #' @param thr The threshold for the procedure. If `NULL`, then calculate using the
 #' `BJ_threshold_calc` function.
 #' @param points The length of the smallest interval considered (step parameter)
-#' @param mode Set to 'left exp' for the procedure with left expanding intervals, or 'right exp'
+#' @param mode Set to 'left' for the procedure with left expanding intervals, or 'right'
 #' for the procedure with right expanding intervals
 #' @param mbj Boolean, if `TRUE`, the modified Berk-Jones statistic is used,
 #' otherwise the standard form
@@ -340,6 +348,11 @@ BJ_threshold_calc <- function(n, points, N, alpha, mbj = FALSE) {
 #' \item{lfdr}{The estimated lfdr values corresponding to the p-values sequence}
 #' \item{groups}{A dataframe with the information about the resulting grouping of the p-values
 #' based on their significance}
+#'
+#' @references  Anastasiou, A., & Fryzlewicz, P. (2022).
+#' Detecting multiple generalized change-points by isolating single ones.
+#' Metrika, 85(2), 141–174. https://doi.org/10.1007/s00184-021-00821-6
+#'
 #' @export
 #' @example
 #' set.seed(6)

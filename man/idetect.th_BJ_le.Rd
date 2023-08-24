@@ -42,3 +42,4 @@ and the value of the Berk-Jones statistic at the fourth column}
 Given a sequence of sorted p-values, perform segmentation into uniform segments using
 the IDetect method with Berk-Jones statistic. We consider left-expanding intervals.
 }
+\keyword{internal}
