@@ -14,13 +14,18 @@
 #' dos_fun(p_seq)
 #' @export
 dos_fun <- function(p_seq, alpha = 1, exc = 0) {
+
   p_seq <- sort(p_seq)
   n <- length(p_seq)
   t <- (p_seq[2 * (1:(n/2))] - 2 * p_seq[1:(n/2)])/((1:(n/2))/n)^alpha
 
   ret <- NULL
   ret$dos_seq <- t
-  ret$cp_loc <- ifelse(max(t) > 0, which.max(t), which.max(t[1:(n/2)]))
+
+
+  if(exc> 0) t <- t[-(1:(exc*n))]
+
+  ret$cp_loc <- ifelse(max(t) > 0, which.max(t) + exc*n, 0)
   return(ret)
 }
 

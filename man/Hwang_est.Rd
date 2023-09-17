@@ -14,8 +14,7 @@ Estimated true null proportion
 }
 \description{
 This function calculates the estimates of the true null proportion using the
-Slope Difference estimator proposed in Hwang, Y. T., Kuo, H. C., Wang,
- C. C., & Lee, M. F. (2014).
+Slope Difference estimator proposed in Hwang, Y. T. et al. (2014).
 }
 \examples{
 p_seq <- sim_pval(100, 0, 3, 0.1, 0)

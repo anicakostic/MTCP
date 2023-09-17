@@ -233,8 +233,7 @@ PRE_est <- function(p_seq)
 #' Hwang et al. Slope Difference estimator calculation
 #'
 #' This function calculates the estimates of the true null proportion using the
-#' Slope Difference estimator proposed in Hwang, Y. T., Kuo, H. C., Wang,
-#'  C. C., & Lee, M. F. (2014).
+#' Slope Difference estimator proposed in Hwang, Y. T. et al. (2014).
 #'
 #' @param p_seq  A sequence of p-values
 #'
@@ -247,13 +246,61 @@ PRE_est <- function(p_seq)
 #' p_seq <- sim_pval(100, 0, 3, 0.1, 0)
 #' Hwang_est(p_seq)
 #' @export
-
 Hwang_est <- function(p_seq) {
   n <- length(p_seq)
   p_seq <- sort(p_seq)
-  J <- which.max((1 - p_seq) / (n + 1 - 1:n) - p_seq / (1:n))
+  k <- max(which(p_seq < 1/2))
+  sd_seq <- (1 - p_seq) / (n + 1 - 1:n) - p_seq / (1:n)
+  J <- which.max(sd_seq[1:k])
   return(min((n + 1 - J) / (1 - p_seq[J]) - 1, n) / n)
 }
 
 
 
+#' Turkheimer et al. Change-point based estimator
+#'
+#' This function calculates the estimates of the true null proportion using the
+#' Change-point based estimator proposed in
+#'  Turkheimer, F. E. et al. (2001)
+#'
+#' @param p_seq  A sequence of p-values
+#' @param alpha Significance level for iterative uniformity testing
+#'
+#' @return Estimated true null proportion
+#' @references Turkheimer, F. E., Smith, C. B., & Schmidt, K. (2001).
+#'  Estimation of the number of “true” null hypotheses in multivariate
+#'   analysis of neuroimaging data. NeuroImage, 13(5), 920–930.
+#'   https://doi.org/10.1006/nimg.2001.0764
+#' @examples
+#' p_seq <- sim_pval(100, 0, 3, 0.1, 0)
+#' turkheimer_est(p_seq, 0.05)
+#' @export
+turkheimer_est <- function(p_seq, alpha) {
+  p_seq <- sort(p_seq)
+  oldlen <- length(p_seq)
+  alphas <- c(0.15, 0.1, 0.05, 0.025, 0.01)
+  quantiles <- c(0.973, 1.073, 1.224, 1.358, 1.518)
+  thr <- quantiles[which(alphas == alpha)]
+  k <- 0
+
+  repeat {
+    n <- length(p_seq)
+    c_min <- max((1:n) / (n + 1) - p_seq)
+    c_min_mod <- (c_min + 0.4 / n) * (sqrt(n) + 0.2 + 0.68 / sqrt(n))
+
+    if (c_min_mod < thr) break
+
+    p_seq <- p_seq[-1]
+    k <- k + 1
+  }
+
+  newlen <- length(p_seq)
+  br <- 1:newlen
+
+  vars <- br * (newlen - br + 1) / (newlen + 1)^2 / (newlen + 2)
+
+  data_pval <- data.frame("pvals" = p_seq, "ind" = (1 + k):oldlen/ oldlen)
+  wls_model <- lm(pvals ~ ind, data = data_pval, weights = vars)
+
+  return(1 / wls_model$coefficients[2])
+}
